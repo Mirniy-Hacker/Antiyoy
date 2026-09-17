@@ -50,6 +50,7 @@ public class SelfTest {
         checkModFlagDefaults();
         checkModFlagModeSeparation();
         checkCommandLineFlagsSurviveSettings();
+        checkModFlagsSurviveRestart();
 
         prepareMatch();
 
@@ -79,6 +80,58 @@ public class SelfTest {
      * загрузка при старте молча обнуляла --mod: прогон шёл без
      * механик, а в отчёте об этом ничего не было.
      */
+    /**
+     * Выбранные в меню механики обязаны пережить перезапуск: иначе
+     * игрок включал бы мод заново каждый раз.
+     *
+     * Настройки игрока сохраняются и возвращаются на место: проверка
+     * не имеет права менять то, что он выбрал.
+     */
+    private void checkModFlagsSurviveRestart() {
+        boolean saved[][] = copyModFlags();
+
+        GameRules.setAllModFlags(true);
+        yio.tro.antiyoy.SettingsManager.getInstance().saveModFlags();
+
+        GameRules.defaultModFlags();
+        yio.tro.antiyoy.SettingsManager.getInstance().loadAllSettings();
+
+        boolean restored = true;
+        for (boolean flags[] : GameRules.getAllModFlags()) {
+            if (!flags[GameRules.MODE_GENERIC]) restored = false;
+            if (!flags[GameRules.MODE_SLAY]) restored = false;
+        }
+
+        applyModFlags(saved);
+        yio.tro.antiyoy.SettingsManager.getInstance().saveModFlags();
+
+        check("механики мода переживают перезапуск", restored);
+    }
+
+
+    private boolean[][] copyModFlags() {
+        boolean source[][] = GameRules.getAllModFlags();
+        boolean result[][] = new boolean[source.length][2];
+
+        for (int i = 0; i < source.length; i++) {
+            result[i][GameRules.MODE_GENERIC] = source[i][GameRules.MODE_GENERIC];
+            result[i][GameRules.MODE_SLAY] = source[i][GameRules.MODE_SLAY];
+        }
+
+        return result;
+    }
+
+
+    private void applyModFlags(boolean values[][]) {
+        boolean target[][] = GameRules.getAllModFlags();
+
+        for (int i = 0; i < target.length; i++) {
+            target[i][GameRules.MODE_GENERIC] = values[i][GameRules.MODE_GENERIC];
+            target[i][GameRules.MODE_SLAY] = values[i][GameRules.MODE_SLAY];
+        }
+    }
+
+
     private void checkCommandLineFlagsSurviveSettings() {
         SimConfig config = SimConfig.getInstance();
         boolean savedOverride = config.modFlagsOverridden;
