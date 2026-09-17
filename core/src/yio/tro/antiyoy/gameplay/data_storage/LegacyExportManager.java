@@ -70,6 +70,10 @@ public class LegacyExportManager {
             builder.append(" " + 10);
         }
 
+        // Лояльность дописывается восьмым полем. Сейвы до мода её не имеют,
+        // и загрузчик подставляет «не назначена» (CLAUDE.md, правило 1).
+        builder.append(" ").append(hex.loyalty);
+
         return builder.toString();
     }
 }

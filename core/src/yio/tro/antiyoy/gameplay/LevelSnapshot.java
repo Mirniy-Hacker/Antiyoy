@@ -263,6 +263,11 @@ public class LevelSnapshot {
         Hex currHex = gameController.fieldManager.field[i][j];
         if (!currHex.active) return;
 
+        // Лояльность восстанавливается безусловно: она меняется каждый ход,
+        // в том числе когда владелец гекса не менялся. Внутри проверки на
+        // смену владельца откат терял бы настроение регионов.
+        currHex.loyalty = fieldCopy[i][j].loyalty;
+
         if (!currHex.sameFraction(fieldCopy[i][j])) {
             // Восстанавливаются оба поля: владелец и цвет. Без ownerId
             // отмена хода вернула бы картинку, но не принадлежность.

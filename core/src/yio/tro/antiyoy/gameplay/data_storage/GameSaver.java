@@ -159,7 +159,13 @@ public class GameSaver {
 
 
     private int[] getHexSnapshotByString(String hexString) {
-        int snapshot[] = new int[7];
+        int snapshot[] = new int[8];
+
+        // Восьмое поле — лояльность. В сейвах до мода его нет, и -1 означает
+        // «не назначена»: регион получит стартовое значение, а не ноль,
+        // который был бы законной «полностью злой» лояльностью.
+        snapshot[7] = -1;
+
         StringTokenizer stringTokenizer = new StringTokenizer(hexString, " ");
         int i = 0;
         while (stringTokenizer.hasMoreTokens()) {
@@ -195,6 +201,7 @@ public class GameSaver {
                 hex.unit.stopJumping();
             }
         }
+        hex.loyalty = snapshot[7];
         hex.moveZoneNumber = snapshot[6]; // this is actually money on hex
         activeIterator.add(hex);
     }

@@ -27,6 +27,25 @@ public class Hex implements ReusableYio, EncodeableYio{
      * появятся новые государства сверх палитры.
      */
     public int ownerId;
+
+    /**
+     * Лояльность гекса, 0..100. Спека, часть III.
+     *
+     * Спека говорит о лояльности региона, но хранится она на гексе
+     * сознательно. Объекты Province и Region пересоздаются при загрузке и
+     * при отмене хода (detectProvinces), поэтому вешать на них состояние
+     * нельзя — оно потеряется. Лояльность региона считается как среднее по
+     * его гексам, а требуемый спекой «перенос по перекрытию площадей» при
+     * такой раскладке получается сам собой.
+     */
+    public int loyalty;
+
+    /**
+     * Регион, которому принадлежит гекс. Пересчитывается при изменении формы
+     * провинции, поэтому устойчивым идентификатором не является и в сейв не
+     * пишется — в отличие от лояльности.
+     */
+    public int regionIndex;
     long animStartTime;
     boolean blockToTreeFromExpanding, canContainObjects;
     public FactorYio animFactor, selectionFactor;
@@ -63,6 +82,10 @@ public class Hex implements ReusableYio, EncodeableYio{
         canContainObjects = true;
         algoLink = null;
         algoValue = 0;
+        // -1 означает «лояльность ещё не назначалась». Ноль — законное
+        // значение, поэтому отличать одно от другого обязательно.
+        loyalty = -1;
+        regionIndex = -1;
         updatePos();
     }
 
@@ -197,6 +220,8 @@ public class Hex implements ReusableYio, EncodeableYio{
         record.active = active;
         record.fraction = fraction;
         record.ownerId = ownerId;
+        record.loyalty = loyalty;
+        record.regionIndex = regionIndex;
         record.objectInside = objectInside;
         record.selected = selected;
         if (unit != null) {

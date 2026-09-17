@@ -11,6 +11,7 @@ import yio.tro.antiyoy.gameplay.editor.EditorProvinceData;
 import yio.tro.antiyoy.gameplay.fog_of_war.FogOfWarManager;
 import yio.tro.antiyoy.gameplay.game_view.GameView;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
+import yio.tro.antiyoy.gameplay.statehood.StatehoodTuning;
 import yio.tro.antiyoy.menu.scenes.Scenes;
 import yio.tro.antiyoy.stuff.GraphicsYio;
 import yio.tro.antiyoy.stuff.PointYio;
@@ -391,6 +392,10 @@ public class FieldManager implements EncodeableYio{
 
             province.placeCapitalInRandomPlace(gameController.predictableRandom);
         }
+
+        // Регионы пересобираются вместе с провинциями: их форма зависит от
+        // формы провинции. Лояльность это переживает — она на гексах.
+        gameController.regionManager.recreateRegions();
     }
 
 
@@ -1379,6 +1384,14 @@ public class FieldManager implements EncodeableYio{
         int previousObject = hex.objectInside;
         cleanOutHex(hex);
         int previousFraction = hex.fraction;
+
+        // Захваченный или купленный гекс приходит недовольным (спека, 3.2).
+        // Это единственная точка смены владельца по ходу игры, поэтому
+        // генерации карты и загрузки сейва она не касается.
+        if (GameRules.areRegionsEnabled() && previousFraction != fraction) {
+            hex.loyalty = StatehoodTuning.loyaltyAcquired;
+        }
+
         hex.setFraction(fraction);
         splitProvince(hex, previousFraction, previousObject);
         checkToUniteProvinces(hex);

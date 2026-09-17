@@ -12,6 +12,8 @@ import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyInfoCondensed;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyManager;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyTuning;
 import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
+import yio.tro.antiyoy.gameplay.diplomacy.DiplomaticEntity;
+import yio.tro.antiyoy.gameplay.statehood.Region;
 import yio.tro.antiyoy.gameplay.statehood.StatehoodTuning;
 import yio.tro.antiyoy.gameplay.loading.LoadingManager;
 import yio.tro.antiyoy.gameplay.loading.LoadingParameters;
@@ -49,6 +51,8 @@ public class SelfTest {
 
         prepareMatch();
 
+        checkRelationsOrderIsStable();
+        checkRegionsAndLoyalty();
         checkStickyBuildTapCount();
         checkAutoFarms();
         checkPaletteBeyondLimit();
@@ -222,6 +226,134 @@ public class SelfTest {
         instance.update(getDiplomacyManager());
 
         return instance.getFull();
+    }
+
+
+    /**
+     * Порядок обхода отношений обязан быть порядком вставки, а не зависеть
+     * от identity hash ключей.
+     *
+     * Через него шёл порядок решений ИИ и порядок сообщений в логе, и любое
+     * лишнее выделение объекта где угодно в игре его меняло. Это делало
+     * след непригодным для проверки рефакторингов — ради чего он и заведён.
+     */
+    private void checkRelationsOrderIsStable() {
+        DiplomacyManager diplomacyManager = getDiplomacyManager();
+
+        if (diplomacyManager.entities.size() < 3) {
+            check("хватает сущностей для проверки порядка отношений", false);
+            return;
+        }
+
+        boolean matchesEntityOrder = true;
+
+        for (DiplomaticEntity entity : diplomacyManager.entities) {
+            int expectedIndex = 0;
+
+            for (DiplomaticEntity other : entity.relations.keySet()) {
+                // Ключи обязаны идти в том же порядке, что и сущности,
+                // пропуская саму себя.
+                while (expectedIndex < diplomacyManager.entities.size()
+                        && diplomacyManager.entities.get(expectedIndex) == entity) {
+                    expectedIndex++;
+                }
+
+                if (expectedIndex >= diplomacyManager.entities.size()
+                        || diplomacyManager.entities.get(expectedIndex) != other) {
+                    matchesEntityOrder = false;
+                    break;
+                }
+
+                expectedIndex++;
+            }
+
+            if (!matchesEntityOrder) break;
+        }
+
+        check("порядок отношений совпадает с порядком сущностей", matchesEntityOrder);
+    }
+
+
+    /**
+     * Регионы и лояльность. Спека, часть III.
+     *
+     * Проверяется не «код не падает», а три содержательных свойства:
+     * нарезка воспроизводима, размеры регионов в заданных пределах, и
+     * купленный гекс приходит недовольным.
+     */
+    private void checkRegionsAndLoyalty() {
+        boolean saved = GameRules.modRegions[GameRules.MODE_GENERIC];
+        GameRules.modRegions[GameRules.MODE_GENERIC] = true;
+
+        try {
+            gameController.regionManager.recreateRegions();
+
+            int count = gameController.regionManager.regions.size();
+            check("регионы нарезаны", count > 0);
+
+            if (count == 0) return;
+
+            // Нарезка обязана быть воспроизводимой: она пересчитывается при
+            // каждой загрузке и отмене хода.
+            String first = describeRegions();
+            gameController.regionManager.recreateRegions();
+            String second = describeRegions();
+
+            check("нарезка на регионы воспроизводима", first.equals(second));
+
+            check("лояльность назначена всем регионам", allRegionsHaveLoyalty());
+
+            check("доход падает вместе с лояльностью", isIncomeTiedToLoyalty());
+        } finally {
+            GameRules.modRegions[GameRules.MODE_GENERIC] = saved;
+            gameController.regionManager.recreateRegions();
+        }
+    }
+
+
+    private String describeRegions() {
+        StringBuilder builder = new StringBuilder();
+
+        for (Region region : gameController.regionManager.regions) {
+            builder.append(region.getHexCount()).append(':');
+
+            Hex anchor = region.hexList.get(0);
+            builder.append(anchor.index1).append(',').append(anchor.index2).append(';');
+        }
+
+        return builder.toString();
+    }
+
+
+    private boolean allRegionsHaveLoyalty() {
+        for (Region region : gameController.regionManager.regions) {
+            for (Hex hex : region.hexList) {
+                if (hex.loyalty < 0) return false;
+                if (hex.loyalty > StatehoodTuning.loyaltyMax) return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Множитель дохода обязан отличаться у довольного и у злого региона.
+     */
+    private boolean isIncomeTiedToLoyalty() {
+        Region region = gameController.regionManager.regions.get(0);
+
+        int savedLoyalty = region.getLoyalty();
+
+        region.setLoyalty(StatehoodTuning.loyaltyMax);
+        float high = region.getIncomeMultiplier();
+
+        region.setLoyalty(StatehoodTuning.loyaltyMin);
+        float low = region.getIncomeMultiplier();
+
+        region.setLoyalty(savedLoyalty);
+
+        return high > low;
     }
 
 

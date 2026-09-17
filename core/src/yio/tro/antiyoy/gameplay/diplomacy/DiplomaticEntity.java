@@ -11,7 +11,7 @@ import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.stuff.object_pool.ReusableYio;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DiplomaticEntity implements ReusableYio {
@@ -31,7 +31,17 @@ public class DiplomaticEntity implements ReusableYio {
 
     public int fraction;
     public String capitalName;
-    public HashMap<DiplomaticEntity, Integer> relations;
+    /**
+     * Отношения к другим сущностям.
+     *
+     * LinkedHashMap, а не HashMap, сознательно: порядок обхода обычной карты
+     * задаётся identity hash ключей, то есть порядком выделения объектов в
+     * памяти. От него зависел порядок, в котором ИИ принимает решения, а
+     * значит и порядок сообщений в дипломатическом логе — и любое лишнее
+     * выделение объекта где угодно в игре его меняло. LinkedHashMap держит
+     * порядок вставки, а вставка идёт по порядку сущностей.
+     */
+    public LinkedHashMap<DiplomaticEntity, Integer> relations;
     public boolean human;
     public boolean alive;
     public boolean hidden;
@@ -41,7 +51,7 @@ public class DiplomaticEntity implements ReusableYio {
     public DiplomaticEntity(DiplomacyManager diplomacyManager) {
         this.diplomacyManager = diplomacyManager;
 
-        relations = new HashMap<>();
+        relations = new LinkedHashMap<>();
         debts = new ArrayList<>();
     }
 
@@ -190,6 +200,15 @@ public class DiplomaticEntity implements ReusableYio {
         }
 
         return dotations;
+    }
+
+
+    /**
+     * Публичная обёртка: лояльность регионов падает, пока провинция воюет
+     * (спека, 3.2), а считается это вне пакета дипломатии.
+     */
+    public boolean isAtWarPublic() {
+        return isAtWar();
     }
 
 

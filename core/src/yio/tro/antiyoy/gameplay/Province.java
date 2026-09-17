@@ -146,13 +146,26 @@ public class Province {
 
 
     public int getIncome() {
-        int income = 0;
+        if (!GameRules.areRegionsEnabled()) {
+            int income = 0;
 
-        for (Hex hex : hexList) {
-            income += gameController.ruleset.getHexIncome(hex);
+            for (Hex hex : hexList) {
+                income += gameController.ruleset.getHexIncome(hex);
+            }
+
+            return income;
         }
 
-        return income;
+        // Доход гекса умножается на лояльность его региона (спека, 3.2):
+        // злой регион приносит меньше, а в волнениях не приносит вовсе.
+        float income = 0;
+
+        for (Hex hex : hexList) {
+            income += gameController.ruleset.getHexIncome(hex)
+                    * gameController.regionManager.getIncomeMultiplierForHex(hex);
+        }
+
+        return (int) income;
     }
 
 

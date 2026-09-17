@@ -22,6 +22,7 @@ import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.gameplay.rules.Ruleset;
 import yio.tro.antiyoy.gameplay.rules.RulesetGeneric;
 import yio.tro.antiyoy.gameplay.rules.RulesetSlay;
+import yio.tro.antiyoy.gameplay.statehood.RegionManager;
 import yio.tro.antiyoy.gameplay.touch_mode.TouchMode;
 import yio.tro.antiyoy.menu.ButtonYio;
 import yio.tro.antiyoy.menu.scenes.Scenes;
@@ -83,6 +84,7 @@ public class GameController {
     public SkipLevelManager skipLevelManager;
     public LevelSizeManager levelSizeManager;
     public ColorsManager colorsManager;
+    public RegionManager regionManager;
     public EncodeManager encodeManager;
     public DecodeManager decodeManager;
     public ImportManager importManager;
@@ -111,6 +113,7 @@ public class GameController {
         importManager = new ImportManager(this);
         encodeManager = new EncodeManager(this);
         colorsManager = new ColorsManager(this);
+        regionManager = new RegionManager(this);
         mapGeneratorSlay = new MapGenerator(this);
         convertedTouchPoint = new PointYio();
         mapGeneratorGeneric = new MapGeneratorGeneric(this);
@@ -509,6 +512,7 @@ public class GameController {
 
         prepareCertainUnitsToMove();
         fieldManager.transformGraves(); // this must be called before 'check for bankrupts' and after 'expand trees'
+        regionManager.updateLoyaltyForFraction(turn);
         collectTributesAndPayTaxes();
         checkForStarvation();
 
