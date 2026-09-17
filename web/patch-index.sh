@@ -47,11 +47,15 @@ cat > "$BODY_PART" <<'BODYEOF'
             // что-то сломалось: при нормальном запуске красный блок поверх
             // игры не нужен.
             window.startupLog = [];
+
+            // ?diag=1 показывает журнал целиком: числа с чужого
+            // устройства иначе не достать.
+            window.showAll = new URLSearchParams(location.search).get("diag") === "1";
             window.showError = function (text) {
                 window.startupLog.push(text);
 
                 var isFailure = /^(УПАЛО|ОШИБКА|ОТКАЗ|КОНСОЛЬ)/.test(text);
-                if (!isFailure) return;
+                if (!isFailure && !window.showAll) return;
 
                 var box = document.getElementById("errbox");
                 if (!box) return;

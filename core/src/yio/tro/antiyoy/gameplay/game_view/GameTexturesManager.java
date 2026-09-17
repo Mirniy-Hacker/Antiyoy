@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import yio.tro.antiyoy.SettingsManager;
+import yio.tro.antiyoy.YioGdxGame;
 import yio.tro.antiyoy.Storage3xTexture;
 import yio.tro.antiyoy.gameplay.ColorsManager;
 import yio.tro.antiyoy.gameplay.GameController;
@@ -85,6 +86,7 @@ public class GameTexturesManager {
 
     private void loadFieldTextures() {
         atlasLoader = getSkinManager().createAtlasLoader();
+        reportAtlas();
         selectionPixel = atlasLoader.getTexture("selection_pixel_lowest.png");
         manTextures = new Storage3xTexture[4];
         for (int i = 0; i < 4; i++) {
@@ -101,6 +103,15 @@ public class GameTexturesManager {
         farmTexture[1] = new Storage3xTexture(atlasLoader, "farm2.png");
         farmTexture[2] = new Storage3xTexture(atlasLoader, "farm3.png");
         strongTowerTexture = new Storage3xTexture(atlasLoader, "strong_tower.png");
+    }
+
+
+    /**
+     * Замер атласа уходит в журнал запуска. Он молчит, пока всё цело,
+     * и это единственный способ узнать числа с чужого телефона.
+     */
+    private void reportAtlas() {
+        YioGdxGame.reportStartup("ДИАГНОСТИКА атлас: " + atlasLoader.describe("man0.png"));
     }
 
 

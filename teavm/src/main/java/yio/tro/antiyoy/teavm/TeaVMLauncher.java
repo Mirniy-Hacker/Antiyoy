@@ -6,6 +6,7 @@ import org.teavm.jso.JSBody;
 import yio.tro.antiyoy.PlatformType;
 import yio.tro.antiyoy.YioGdxGame;
 import yio.tro.antiyoy.gameplay.sim.SimConfig;
+import yio.tro.antiyoy.stuff.LanguagesManager;
 
 /**
  * Веб-точка входа. Собирается в JS или WASM и открывается в Safari на
@@ -23,6 +24,8 @@ public class TeaVMLauncher {
         // iOS нет, а застывшая заставка не отличается от падения.
         YioGdxGame.startupReporter = new WebStartupReporter();
 
+        applyBrowserLanguage();
+
         applyPlaytestParameter();
 
         WebApplicationConfiguration configuration = new WebApplicationConfiguration();
@@ -35,6 +38,29 @@ public class TeaVMLauncher {
 
         new WebApplication(new YioGdxGame(), configuration);
     }
+
+
+    /**
+    /**
+     * Язык берётся у браузера.
+     *
+     * Locale.getDefault() под TeaVM сообщает не язык браузера, и игра
+     * открывалась по-английски независимо от настроек телефона.
+     * Выбор, сделанный вручную в меню, это не трогает: он хранится
+     * отдельно и перекрывает определение.
+     */
+    private static void applyBrowserLanguage() {
+        String language = readBrowserLanguage();
+        if (language == null || language.length() == 0) return;
+
+        LanguagesManager.systemLanguageOverride = language.replace('-', '_');
+
+        YioGdxGame.reportStartup("ДИАГНОСТИКА язык браузера: " + language);
+    }
+
+
+    @JSBody(params = {}, script = "return navigator.language || '';")
+    private static native String readBrowserLanguage();
 
 
     /**

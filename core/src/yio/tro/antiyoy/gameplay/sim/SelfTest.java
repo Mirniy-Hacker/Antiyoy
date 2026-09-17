@@ -1,6 +1,7 @@
 package yio.tro.antiyoy.gameplay.sim;
 
 import yio.tro.antiyoy.YioGdxGame;
+import yio.tro.antiyoy.stuff.LanguagesManager;
 import yio.tro.antiyoy.gameplay.DebugFlags;
 import yio.tro.antiyoy.gameplay.ColorsManager;
 import yio.tro.antiyoy.gameplay.GameController;
@@ -51,6 +52,7 @@ public class SelfTest {
         checkModFlagModeSeparation();
         checkCommandLineFlagsSurviveSettings();
         checkModFlagsSurviveRestart();
+        checkTranslationIsNotOverwritten();
 
         prepareMatch();
 
@@ -87,6 +89,28 @@ public class SelfTest {
      * Настройки игрока сохраняются и возвращаются на место: проверка
      * не имеет права менять то, что он выбрал.
      */
+    /**
+     * Выбранный язык не имеет права подменяться английским.
+     *
+     * Запасной английский словарь для непереведённых строк сначала
+     * писался в основной и затирал перевод целиком: игра молча
+     * открывалась по-английски при верно определённом языке.
+     */
+    private void checkTranslationIsNotOverwritten() {
+        LanguagesManager languages = LanguagesManager.getInstance();
+        String savedLanguage = languages.getLanguage();
+
+        languages.setLanguage("ru_RU");
+        String translated = languages.getString("more");
+        String missing = languages.getString("lang_characters_that_do_not_exist");
+
+        languages.setLanguage(savedLanguage);
+
+        check("перевод не подменяется английским", !translated.equals("More") && !translated.equals("more"));
+        check("непереведённый ключ виден как ключ или по-английски", missing != null);
+    }
+
+
     private void checkModFlagsSurviveRestart() {
         boolean saved[][] = copyModFlags();
 

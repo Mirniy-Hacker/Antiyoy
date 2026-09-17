@@ -21,7 +21,8 @@ public class GameView {
     SpriteBatch batchMovable, batchSolid;
     float borderLineThickness;
     public float hexViewSize;
-    int w, h, currentZoomQuality;
+    int w, h;
+    public int currentZoomQuality;
     public OrthographicCamera orthoCam;
     double zoomLevelOne, zoomLevelTwo;
     public GameRendersList rList;

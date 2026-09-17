@@ -127,7 +127,11 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     public static StartupReporter startupReporter;
 
 
-    private static void reportStartup(String message) {
+    /**
+     * Отметка о ходе запуска. Публичная: тем же каналом уходит
+     * диагностика с устройства, до которого иначе не дотянуться.
+     */
+    public static void reportStartup(String message) {
         if (startupReporter == null) return;
 
         startupReporter.report(message);

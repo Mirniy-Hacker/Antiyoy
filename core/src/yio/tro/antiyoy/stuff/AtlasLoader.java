@@ -73,6 +73,50 @@ public class AtlasLoader {
     }
 
 
+    /**
+     * Числа для диагностики с устройства.
+     *
+     * На iPhone объекты поля рисуются полосками, а в браузере на
+     * десктопе — правильно. Отличить сломанный разбор файла от
+     * неверного размера текстуры можно только замером на месте.
+     */
+    public String describe(String fileName) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(srcName).append(": ");
+
+        if (atlasRegion == null) {
+            return builder.append("текстуры нет").toString();
+        }
+
+        builder.append("текстура ")
+                .append(atlasRegion.getTexture().getWidth()).append('x')
+                .append(atlasRegion.getTexture().getHeight());
+
+        builder.append(", записей ").append(fileNames.size());
+        builder.append(", rows=").append(rows);
+
+        int index = fileNames.indexOf(fileName);
+        if (index < 0) {
+            return builder.append(", нет записи ").append(fileName).toString();
+        }
+
+        RectangleYio spec = imageSpecs.get(index);
+        builder.append(", ").append(fileName).append(" разбор ")
+                .append((int) spec.x).append(' ')
+                .append((int) spec.y).append(' ')
+                .append((int) spec.width).append(' ')
+                .append((int) spec.height);
+
+        TextureRegion region = getTexture(fileName);
+        builder.append(", область ")
+                .append(region.getRegionWidth()).append('x')
+                .append(region.getRegionHeight());
+
+        return builder.toString();
+    }
+
+
     public TextureRegion getTexture(String fileName) {
         int index = fileNames.indexOf(fileName);
         return new TextureRegion(

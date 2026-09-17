@@ -137,6 +137,12 @@ public class PlaytestRunner {
                 + ", объектов " + yioGdxGame.gameController.fieldManager.solidObjects.size()
                 + ", воинов " + yioGdxGame.gameController.unitList.size()
                 + ", казна " + describeMoney());
+
+        YioGdxGame.reportStartup("ДИАГНОСТИКА поле: гексов "
+                + yioGdxGame.gameController.fieldManager.activeHexes.size()
+                + ", объектов " + yioGdxGame.gameController.fieldManager.solidObjects.size()
+                + ", размер гекса " + yioGdxGame.gameView.hexViewSize
+                + ", качество " + yioGdxGame.gameView.currentZoomQuality);
     }
 
 

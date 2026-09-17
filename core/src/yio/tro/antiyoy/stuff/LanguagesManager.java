@@ -14,6 +14,13 @@ public class LanguagesManager {
     private static final String LANGUAGES_FILE = "languages.xml";
     private static final String DEFAULT_LANGUAGE = "en_UK";
 
+    /**
+     * Язык системы, если платформа умеет сообщить его лучше, чем
+     * Locale.getDefault(). В вебе тот возвращает язык не браузера, и игра
+     * открывалась по-английски независимо от настроек телефона.
+     */
+    public static String systemLanguageOverride = null;
+
     private HashMap<String, String> _language = null;
 
     /**
@@ -34,8 +41,14 @@ public class LanguagesManager {
 
         // Try to load system language
         // If it fails, fallback to default language
-        _languageName = java.util.Locale.getDefault().toString();
-        if (!loadLanguage(_languageName)) {
+        _languageName = (systemLanguageOverride != null)
+                ? systemLanguageOverride
+                : java.util.Locale.getDefault().toString();
+        boolean loaded = loadLanguage(_languageName);
+        yio.tro.antiyoy.YioGdxGame.reportStartup("ДИАГНОСТИКА язык: запрошен " + _languageName
+                + ", подошёл " + loaded);
+
+        if (!loaded) {
             loadLanguage(DEFAULT_LANGUAGE);
             _languageName = DEFAULT_LANGUAGE;
         }
@@ -143,6 +156,8 @@ public class LanguagesManager {
 
 
     public boolean loadLanguage(String languageName) {
+        XmlReader.Element prefixMatch = null;
+
         try {
             XmlReader.Element root = readLanguagesFile();
 
@@ -155,6 +170,14 @@ public class LanguagesManager {
 
                 boolean matches = languageName.equals(name)
                         || (secondName != null && secondName.equals(languageName));
+
+                // Браузер сообщает язык как ru-RU или просто ru, а в файле
+                // названия вида ru_RU. Совпадения по двухбуквенному коду
+                // достаточно: второго русского в файле нет.
+                if (!matches && name != null && sameLanguageCode(languageName, name)) {
+                    prefixMatch = language;
+                }
+
                 if (!matches) continue;
 
                 _language.clear();
@@ -169,6 +192,13 @@ public class LanguagesManager {
             return false;
         }
 
+        if (prefixMatch != null) {
+            _language.clear();
+            loadStringsInto(prefixMatch);
+            loadFallback(prefixMatch.getParent());
+            return true;
+        }
+
         return false;
     }
 
@@ -177,6 +207,32 @@ public class LanguagesManager {
      * Английский словарь заполняется тем же разбором файла: читать
      * 700 килобайт XML второй раз незачем.
      */
+    /**
+     * Совпадают ли двухбуквенные коды языков. Разделитель бывает и
+     * дефисом, и подчёркиванием: браузер пишет ru-RU, файл — ru_RU.
+     */
+    private boolean sameLanguageCode(String first, String second) {
+        String firstCode = languageCode(first);
+        String secondCode = languageCode(second);
+
+        return firstCode.length() > 0 && firstCode.equals(secondCode);
+    }
+
+
+    private String languageCode(String name) {
+        String lowerCase = name.toLowerCase();
+
+        for (int i = 0; i < lowerCase.length(); i++) {
+            char symbol = lowerCase.charAt(i);
+            if (symbol == '_' || symbol == '-') {
+                return lowerCase.substring(0, i);
+            }
+        }
+
+        return lowerCase;
+    }
+
+
     private void loadFallback(XmlReader.Element root) {
         _fallback.clear();
 
@@ -207,7 +263,7 @@ public class LanguagesManager {
 
             // Перенос строки задаётся только через <br />, и делается это
             // после нормализации.
-            _language.put(key, normalizeAttribute(value).replace("<br />", "\n"));
+            target.put(key, normalizeAttribute(value).replace("<br />", "\n"));
         }
     }
 
