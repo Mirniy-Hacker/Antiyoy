@@ -46,6 +46,7 @@ public class SelfTest {
 
         prepareMatch();
 
+        checkOwnerIdInvariant();
         checkStateHashSensitivity();
         checkVersionPrefix();
         checkRoundTrip();
@@ -209,6 +210,42 @@ public class SelfTest {
         instance.update(getDiplomacyManager());
 
         return instance.getFull();
+    }
+
+
+    /**
+     * Инвариант этапа 1: пока владелец и цвет не разведены по-настоящему,
+     * ownerId обязан совпадать с fraction на каждом гексе.
+     *
+     * Это страховка на время рефакторинга: если хоть одно место меняет
+     * fraction в обход владельца, проверка это поймает сразу, а не через
+     * расхождение следа на сотом ходу.
+     */
+    private void checkOwnerIdInvariant() {
+        int mismatches = 0;
+        Hex firstMismatch = null;
+
+        for (int i = 0; i < gameController.fieldManager.fWidth; i++) {
+            for (int j = 0; j < gameController.fieldManager.fHeight; j++) {
+                Hex hex = gameController.fieldManager.field[i][j];
+                if (hex == null) continue;
+                if (hex.ownerId == hex.fraction) continue;
+
+                mismatches++;
+                if (firstMismatch == null) {
+                    firstMismatch = hex;
+                }
+            }
+        }
+
+        check("ownerId совпадает с fraction на всех гексах", mismatches == 0);
+
+        if (mismatches > 0) {
+            System.out.println("       расхождений: " + mismatches +
+                    ", первое на гексе " + firstMismatch.index1 + "," + firstMismatch.index2 +
+                    " (ownerId " + firstMismatch.ownerId +
+                    ", fraction " + firstMismatch.fraction + ")");
+        }
     }
 
 

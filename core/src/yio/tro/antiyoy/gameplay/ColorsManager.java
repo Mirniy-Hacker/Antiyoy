@@ -87,7 +87,11 @@ public class ColorsManager {
         for (Hex activeHex : activeHexes) {
             if (!GameRules.slayRules && activeHex.isNeutral()) continue;
 
-            activeHex.fraction = gameController.colorsManager.getFractionByColor(activeHex.fraction);
+            // Это не перекраска, а переиндексация владельцев: меняются обе
+            // величины разом. После этапа 1 менять здесь можно будет только
+            // цвет, но пока владелец и цвет обязаны совпадать.
+            activeHex.setOwnerSilently(
+                    gameController.colorsManager.getFractionByColor(activeHex.getOwnerId()));
         }
 
         gameController.fieldManager.detectProvinces();
@@ -107,7 +111,7 @@ public class ColorsManager {
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
             if (!GameRules.slayRules && activeHex.isNeutral()) continue;
 
-            activeHex.fraction = getShiftedColor(activeHex.fraction, delta);
+            activeHex.setOwnerSilently(getShiftedColor(activeHex.getOwnerId(), delta));
         }
     }
 

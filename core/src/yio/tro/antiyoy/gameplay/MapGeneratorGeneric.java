@@ -57,7 +57,7 @@ public class MapGeneratorGeneric extends MapGenerator {
 
     private void makeAllActiveHexesNeutral() {
         for (Hex activeHex : getActiveHexes()) {
-            activeHex.fraction = GameRules.NEUTRAL_FRACTION;
+            activeHex.setOwnerSilently(GameRules.NEUTRAL_FRACTION);
         }
 
         flagNeutrals = true;
@@ -86,7 +86,7 @@ public class MapGeneratorGeneric extends MapGenerator {
             for (int i = 0; i < 6; i++) {
                 Hex adjHex = activeHex.getAdjacentHex(i);
                 if (!adjHex.active || !adjHex.isNeutral()) continue;
-                adjHex.fraction = activeHex.fraction;
+                adjHex.setOwnerSilently(activeHex.getOwnerId());
                 c--;
                 if (c == 0) break;
             }
@@ -165,7 +165,7 @@ public class MapGeneratorGeneric extends MapGenerator {
         for (int i = 0; i < num; i++) {
             Hex hex = findHexToExcludeFromProvince(provinceList);
             provinceList.remove(hex);
-            hex.fraction = GameRules.NEUTRAL_FRACTION;
+            hex.setOwnerSilently(GameRules.NEUTRAL_FRACTION);
         }
     }
 
@@ -179,11 +179,11 @@ public class MapGeneratorGeneric extends MapGenerator {
             Hex hex = propagationList.get(0);
             propagationList.remove(0);
             if (random.nextInt(startingPotential) > hex.genPotential) continue;
-            hex.fraction = spawnHex.fraction;
+            hex.setOwnerSilently(spawnHex.getOwnerId());
             if (hex.genPotential == 0) continue;
             for (int i = 0; i < 6; i++) {
                 Hex adjHex = hex.getAdjacentHex(i);
-                if (!propagationList.contains(adjHex) && adjHex.active && adjHex.fraction == GameRules.NEUTRAL_FRACTION) {
+                if (!propagationList.contains(adjHex) && adjHex.active && adjHex.isNeutral()) {
                     adjHex.genPotential = hex.genPotential - 1;
                     propagationList.add(adjHex);
                 }
@@ -197,7 +197,7 @@ public class MapGeneratorGeneric extends MapGenerator {
         while (provinceList.size() > SMALL_PROVINCE_SIZE) {
             Hex hex = findHexToExcludeFromProvince(provinceList);
             provinceList.remove(hex);
-            hex.fraction = GameRules.NEUTRAL_FRACTION;
+            hex.setOwnerSilently(GameRules.NEUTRAL_FRACTION);
         }
     }
 

@@ -264,6 +264,9 @@ public class LevelSnapshot {
         if (!currHex.active) return;
 
         if (!currHex.sameFraction(fieldCopy[i][j])) {
+            // Восстанавливаются оба поля: владелец и цвет. Без ownerId
+            // отмена хода вернула бы картинку, но не принадлежность.
+            currHex.ownerId = fieldCopy[i][j].ownerId;
             currHex.fraction = fieldCopy[i][j].fraction;
             gameController.addAnimHex(currHex);
         }

@@ -85,7 +85,7 @@ public class MapGenerator {
                 Hex adjacentHex = activeHex.getAdjacentHex(i);
                 if (!adjacentHex.active) continue;
 
-                adjacentHex.fraction = 0;
+                adjacentHex.setOwnerSilently(0);
                 break;
             }
 
@@ -112,7 +112,7 @@ public class MapGenerator {
             for (int i = 0; i < 6; i++) {
                 Hex adjHex = hex.getAdjacentHex(i);
                 if (adjHex.active && !adjHex.sameFraction(hex) && random.nextDouble() < power) {
-                    adjHex.fraction = hex.fraction;
+                    adjHex.setOwnerSilently(hex.getOwnerId());
                 }
             }
         }
@@ -131,7 +131,7 @@ public class MapGenerator {
     protected void decreaseProvince(ArrayList<Hex> provinceList, double power) {
         for (Hex hex : provinceList) {
             if (hexHasEnemiesNear(hex) && random.nextDouble() < power) {
-                hex.fraction = getRandomFraction();
+                hex.setOwnerSilently(getRandomFraction());
             }
         }
     }
@@ -192,7 +192,7 @@ public class MapGenerator {
             Hex hex = propagationList.get(0);
             propagationList.remove(0);
             if (random.nextInt(startingPotential) > hex.genPotential) continue;
-            hex.fraction = spawnHex.fraction;
+            hex.setOwnerSilently(spawnHex.getOwnerId());
             if (hex.genPotential == 0) continue;
             for (int i = 0; i < 6; i++) {
                 Hex adjHex = hex.getAdjacentHex(i);
@@ -254,7 +254,7 @@ public class MapGenerator {
         while (provinceList.size() > SMALL_PROVINCE_SIZE) {
             Hex hex = findHexToExcludeFromProvince(provinceList);
             provinceList.remove(hex);
-            hex.fraction = getRandomFractionExceptOne(provinceFraction);
+            hex.setOwnerSilently(getRandomFractionExceptOne(provinceFraction));
         }
     }
 
@@ -332,7 +332,7 @@ public class MapGenerator {
             if (i == provinceList.get(0).fraction) continue;
             if (!provinceHasNeighbourWithFraction(provinceList, i)) {
                 for (Hex hex : provinceList) {
-                    hex.fraction = i;
+                    hex.setOwnerSilently(i);
                 }
                 return true;
             }
