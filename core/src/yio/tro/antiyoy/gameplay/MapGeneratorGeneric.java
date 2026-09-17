@@ -36,7 +36,7 @@ public class MapGeneratorGeneric extends MapGenerator {
     // not actually needed right now
     private boolean hasGreenProvince() {
         for (Hex activeHex : getActiveHexes()) {
-            if (activeHex.fraction != 0) continue;
+            if (!activeHex.sameOwner(0)) continue;
             if (activeHex.numberOfFriendlyHexesNearby() < 2) continue;
 
             return true;

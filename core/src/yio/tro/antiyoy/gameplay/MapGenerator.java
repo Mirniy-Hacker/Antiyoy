@@ -79,7 +79,7 @@ public class MapGenerator {
         if (mapHasAtLeastOnePlayerProvince()) return;
 
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
-            if (activeHex.fraction != 0) continue;
+            if (!activeHex.sameOwner(0)) continue;
 
             for (int i = 0; i < 6; i++) {
                 Hex adjacentHex = activeHex.getAdjacentHex(i);
@@ -96,7 +96,7 @@ public class MapGenerator {
 
     private boolean mapHasAtLeastOnePlayerProvince() {
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
-            if (activeHex.fraction != 0) continue;
+            if (!activeHex.sameOwner(0)) continue;
 
             if (activeHex.numberOfFriendlyHexesNearby() > 0) {
                 return true;
@@ -196,7 +196,7 @@ public class MapGenerator {
             if (hex.genPotential == 0) continue;
             for (int i = 0; i < 6; i++) {
                 Hex adjHex = hex.getAdjacentHex(i);
-                if (!propagationList.contains(adjHex) && adjHex.active && adjHex.fraction != spawnHex.fraction) {
+                if (!propagationList.contains(adjHex) && adjHex.active && !adjHex.sameOwner(spawnHex)) {
                     adjHex.genPotential = hex.genPotential - 1;
                     propagationList.add(adjHex);
                 }

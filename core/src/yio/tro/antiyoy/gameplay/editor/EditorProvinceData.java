@@ -74,7 +74,7 @@ public class EditorProvinceData implements ReusableYio, EncodeableYio{
     public int countFraction(int fraction) {
         int c = 0;
         for (Hex hex : hexList) {
-            if (hex.fraction != fraction) continue;
+            if (!hex.sameOwner(fraction)) continue;
             c++;
         }
         return c;

@@ -600,7 +600,7 @@ public class DiplomacyManager {
             if (adjacentHex == null) continue;
             if (adjacentHex.isNullHex()) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != hex.fraction) continue;
+            if (!adjacentHex.sameOwner(hex)) continue;
             return false;
         }
 

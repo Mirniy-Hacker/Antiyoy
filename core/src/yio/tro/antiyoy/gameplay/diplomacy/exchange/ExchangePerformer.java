@@ -98,7 +98,7 @@ public class ExchangePerformer {
             case lands:
                 ArrayList<Hex> hexList = diplomacyManager.convertStringToHexList(split[1]);
                 for (Hex hex : hexList) {
-                    if (hex.fraction != giver.fraction) return ExchangeType.lands;
+                    if (hex.getOwnerId() != giver.entityId) return ExchangeType.lands;
                 }
                 return null;
             case war_declaration:

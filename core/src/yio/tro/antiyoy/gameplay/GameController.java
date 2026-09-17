@@ -448,7 +448,7 @@ public class GameController {
         fieldManager.clearProvincesList();
         ArrayList<Hex> hexList = new ArrayList<>();
         for (Hex activeHex : fieldManager.activeHexes) {
-            if (activeHex.fraction == winnerFraction) {
+            if (activeHex.sameOwner(winnerFraction)) {
                 hexList.add(activeHex);
                 break;
             }

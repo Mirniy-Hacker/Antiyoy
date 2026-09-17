@@ -304,7 +304,7 @@ public class Province {
                 if (adjacentHex == null) continue;
                 if (adjacentHex.isNullHex()) continue;
                 if (!adjacentHex.active) continue;
-                if (adjacentHex.fraction != otherFraction) continue;
+                if (!adjacentHex.sameOwner(otherFraction)) continue;
                 return true;
             }
         }

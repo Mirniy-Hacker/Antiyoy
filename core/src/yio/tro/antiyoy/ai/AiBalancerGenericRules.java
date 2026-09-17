@@ -340,7 +340,7 @@ public class AiBalancerGenericRules extends AiExpertGenericRules implements Comp
     ArrayList<Hex> findAttackableHexes(int attackerFraction, ArrayList<Hex> moveZone) {
         result.clear();
         for (Hex hex : moveZone) {
-            if (hex.fraction == attackerFraction) continue;
+            if (hex.sameOwner(attackerFraction)) continue;
             result.add(hex);
         }
 

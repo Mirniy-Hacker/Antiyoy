@@ -89,7 +89,7 @@ public class AttackManager {
 
             @Override
             public void onHexReached(Hex previousHex, Hex hex) {
-                if (hex.fraction == getFraction()) return;
+                if (hex.sameOwner(getFraction())) return;
                 if (!pattern.contains(hex)) return;
                 hex.aiData.potentialAttackers.add(tempUnit);
             }
@@ -535,7 +535,7 @@ public class AttackManager {
 
     Hex getEmptyOwnedHex(ArrayList<Hex> list) {
         for (Hex hex : list) {
-            if (hex.fraction != getFraction()) continue;
+            if (!hex.sameOwner(getFraction())) continue;
             if (!hex.isEmpty()) continue;
             if (!hex.aiData.currentlyOwned) continue;
             return hex;

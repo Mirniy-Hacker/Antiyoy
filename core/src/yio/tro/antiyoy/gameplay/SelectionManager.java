@@ -319,7 +319,7 @@ public class SelectionManager {
             Hex adjacentHex = hex.getAdjacentHex(i);
             if (adjacentHex == null) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != hex.fraction) continue;
+            if (!adjacentHex.sameOwner(hex)) continue;
             if (!isHexGoodForDefenseTip(adjacentHex)) continue;
 
             return adjacentHex;
@@ -391,7 +391,7 @@ public class SelectionManager {
 
         if (asFilterFraction == -1) return true;
 
-        if (hex.fraction != asFilterFraction) return false;
+        if (!hex.sameOwner(asFilterFraction)) return false;
         if (gameController.fieldManager.getProvinceByHex(hex) == null) return false;
 
         return true;

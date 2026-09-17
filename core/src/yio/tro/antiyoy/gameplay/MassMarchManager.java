@@ -51,7 +51,7 @@ public class MassMarchManager {
         Hex bestHex = null;
         for (Hex hex : moveZone) {
             if (!hex.isEmpty() && !hex.containsTree()) continue;
-            if (hex.fraction != fraction) continue;
+            if (!hex.sameOwner(fraction)) continue;
             if (bestHex == null || hex.algoValue < bestHex.algoValue) {
                 bestHex = hex;
             }
@@ -77,7 +77,7 @@ public class MassMarchManager {
             if (adjacentHex == null) continue;
             if (adjacentHex.isNullHex()) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != hex.fraction) continue;
+            if (!adjacentHex.sameOwner(hex)) continue;
             if (adjacentHex.algoLink != null) continue;
             addToPropagationList(adjacentHex, hex);
         }

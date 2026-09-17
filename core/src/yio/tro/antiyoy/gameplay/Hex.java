@@ -316,7 +316,7 @@ public class Hex implements ReusableYio, EncodeableYio{
             if (adjacentHex == null) continue;
             if (adjacentHex.isNullHex()) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != fraction) continue;
+            if (!adjacentHex.sameOwner(ownerId)) continue;
             if (adjacentHex.objectInside != objectIndex) continue;
             return true;
         }

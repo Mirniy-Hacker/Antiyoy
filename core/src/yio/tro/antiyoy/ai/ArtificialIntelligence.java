@@ -428,7 +428,7 @@ public abstract class ArtificialIntelligence extends AbstractAi{
     ArrayList<Hex> findAttackableHexes(int attackerFraction, ArrayList<Hex> moveZone) {
         tempResultList.clear();
         for (Hex hex : moveZone) {
-            if (hex.fraction == attackerFraction) continue;
+            if (hex.sameOwner(attackerFraction)) continue;
             tempResultList.add(hex);
         }
         return tempResultList;

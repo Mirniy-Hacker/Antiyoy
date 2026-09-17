@@ -98,7 +98,7 @@ public class DefenseManager {
 
             @Override
             public void onHexReached(Hex previousHex, Hex hex) {
-                if (hex.fraction == getFraction()) return;
+                if (hex.sameOwner(getFraction())) return;
                 if (!pattern.contains(hex)) return;
                 hex.aiData.potentialAttackers.add(tempUnit);
             }
@@ -108,14 +108,14 @@ public class DefenseManager {
             @Override
             public boolean isPropagationAllowed(Hex src, Hex dst) {
                 if (pattern.contains(dst) && dst.aiData.canBeCaptured) return true;
-                if (dst.fraction == getFraction()) return true;
+                if (dst.sameOwner(getFraction())) return true;
                 return false;
             }
 
 
             @Override
             public void onHexReached(Hex previousHex, Hex hex) {
-                if (hex.fraction != getFraction()) return;
+                if (!hex.sameOwner(getFraction())) return;
                 if (!hex.containsUnit()) return;
                 Unit unit = hex.unit;
                 if (!unit.isReadyToMove()) return;
@@ -128,7 +128,7 @@ public class DefenseManager {
         casterDirectFight = new PropagationCaster(aiMaster) {
             @Override
             public boolean isPropagationAllowed(Hex src, Hex dst) {
-                return dst.fraction == getFraction();
+                return dst.sameOwner(getFraction());
             }
 
 
@@ -285,7 +285,7 @@ public class DefenseManager {
         for (int dir = 0; dir < 6; dir++) {
             Hex adjacentHex = hex.getAdjacentHex(dir);
             if (!isWorkable(adjacentHex)) continue;
-            if (adjacentHex.fraction != enemyFraction) continue;
+            if (!adjacentHex.sameOwner(enemyFraction)) continue;
             if (!adjacentHex.containsUnit()) continue;
             c += adjacentHex.unit.strength;
         }
@@ -357,7 +357,7 @@ public class DefenseManager {
 
     Hex getEmptyOwnedHex(ArrayList<Hex> list) {
         for (Hex hex : list) {
-            if (hex.fraction != getFraction()) continue;
+            if (!hex.sameOwner(getFraction())) continue;
             if (!hex.isEmpty()) continue;
             if (!hex.aiData.currentlyOwned) continue;
             return hex;
@@ -783,7 +783,7 @@ public class DefenseManager {
             for (int dir = 0; dir < 6; dir++) {
                 Hex adjacentHex = hex.getAdjacentHex(dir);
                 if (!isWorkable(adjacentHex)) continue;
-                if (adjacentHex.fraction != group.fraction) continue;
+                if (!adjacentHex.sameOwner(group.fraction)) continue;
                 if (adjacentHex.containsUnit()) continue;
                 if (supportLands.contains(adjacentHex)) continue;
                 supportLands.add(adjacentHex);
@@ -799,7 +799,7 @@ public class DefenseManager {
             for (int dir = 0; dir < 6; dir++) {
                 Hex adjacentHex = hex.getAdjacentHex(dir);
                 if (!isWorkable(adjacentHex)) continue;
-                if (adjacentHex.fraction != getFraction()) continue;
+                if (!adjacentHex.sameOwner(getFraction())) continue;
                 if (contactZone.contains(adjacentHex)) continue;
                 contactZone.add(adjacentHex);
             }
