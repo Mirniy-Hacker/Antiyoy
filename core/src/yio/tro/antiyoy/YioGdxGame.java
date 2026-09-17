@@ -704,6 +704,14 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     }
 
 
+    // Метод появился в libGDX 1.9.12. Раньше отменённые касания приходили
+    // как touchUp, поэтому делегирование туда воспроизводит прежнее поведение.
+    @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return touchUp(screenX, screenY, pointer, button);
+    }
+
+
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         try {
@@ -794,7 +802,11 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
 
 
     @Override
-    public boolean scrolled(int amount) {
+    public boolean scrolled(float amountX, float amountY) {
+        // libGDX сменил сигнатуру scrolled(int) на scrolled(float, float).
+        // Вертикальная прокрутка по-прежнему даёт ±1 за щелчок колеса.
+        int amount = Math.round(amountY);
+
         if (menuControllerYio.onMouseWheelScrolled(amount)) return true; // UI can catch mouse scroll
 
         if (gameView.appearFactor.get() > 0.1) {
