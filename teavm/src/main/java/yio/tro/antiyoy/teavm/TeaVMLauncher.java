@@ -17,6 +17,10 @@ public class TeaVMLauncher {
         // обработка касаний. Веб-сборка живёт именно на телефоне.
         YioGdxGame.platformType = PlatformType.ios;
 
+        // Отметки о ходе запуска выводятся прямо на страницу: консоли на
+        // iOS нет, а застывшая заставка не отличается от падения.
+        YioGdxGame.startupReporter = new WebStartupReporter();
+
         WebApplicationConfiguration configuration = new WebApplicationConfiguration();
 
         configuration.canvasID = "canvas";

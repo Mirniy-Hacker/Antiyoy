@@ -35,7 +35,7 @@ HEADEOF
 cat > "$BODY_PART" <<'BODYEOF'
         <div id="errbox" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99;background:#300;color:#fdd;font:12px monospace;padding:10px;white-space:pre-wrap;max-height:60vh;overflow:auto"></div>
         <script>
-            function showError(text) {
+            window.showError = function (text) {
                 var box = document.getElementById("errbox");
                 if (!box) return;
                 box.style.display = "block";

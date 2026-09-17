@@ -110,22 +110,69 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     }
 
 
+    /**
+     * Приёмник сообщений о ходе запуска.
+     *
+     * Нужен вебу: консоли на iOS нет, а исключение внутри кадра гасит цикл
+     * отрисовки — на экране просто застывает заставка, и отличить падение от
+     * зависания невозможно. Платформа подставляет реализацию, которая пишет
+     * прямо на страницу.
+     */
+    public interface StartupReporter {
+
+        void report(String message);
+    }
+
+    public static StartupReporter startupReporter;
+
+
+    private static void reportStartup(String message) {
+        if (startupReporter == null) return;
+
+        startupReporter.report(message);
+    }
+
+
     private void generalInitialization() {
+        try {
+            performGeneralInitialization();
+        } catch (Throwable throwable) {
+            // Ловится Throwable, а не Exception: под TeaVM отсутствующий
+            // метод или класс прилетает Error, и Exception его не поймает.
+            reportStartup("УПАЛО: " + throwable);
+
+            for (StackTraceElement element : throwable.getStackTrace()) {
+                reportStartup("    " + element);
+            }
+
+            throw throwable;
+        }
+    }
+
+
+    private void performGeneralInitialization() {
         long time1 = System.currentTimeMillis();
         loadedResources = true;
         startedExitProcess = false;
         screenVerySmall = Gdx.graphics.getDensity() < 1.2;
+        reportStartup("initializeSingletons");
         initializeSingletons();
+        reportStartup("loadSomeTextures");
         loadSomeTextures();
+        reportStartup("SoundManagerYio.loadAllSounds");
         SoundManagerYio.loadAllSounds();
+        reportStartup("MusicManager.getInstance.load");
         MusicManager.getInstance().load();
         transitionFactor = new FactorYio();
         splatController.splatTransparencyFactor = new FactorYio();
         splatController.initSplats();
 
         SettingsManager.getInstance().setYioGdxGame(this);
+        reportStartup("SettingsManager.getInstance.loadAllSetti");
         SettingsManager.getInstance().loadAllSettings();
+        reportStartup("Fonts.initFonts");
         Fonts.initFonts();
+        reportStartup("CityNameGenerator.getInstance.load");
         CityNameGenerator.getInstance().load();
         DiplomacyInfoCondensed.onGeneralInitialization();
         gamePaused = true;
@@ -133,11 +180,16 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         fps = 0;
         timeToUpdateFpsInfo = System.currentTimeMillis() + 1000;
 
+        reportStartup("loadProgress");
         loadProgress();
+        reportStartup("SingleMessages.load");
         SingleMessages.load();
         skinManager = new SkinManager(this);
+        reportStartup("menuControllerYio");
         menuControllerYio = new MenuControllerYio(this);
+        reportStartup("menuViewYio");
         menuViewYio = new MenuViewYio(this);
+        reportStartup("gameController");
         gameController = new GameController(this); // must be called after menu controller is created. because of languages manager and other stuff
         saveSystem = new SaveSystem(gameController); // must be called after game controller is created
         gameView = new GameView(this);
