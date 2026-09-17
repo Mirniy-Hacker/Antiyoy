@@ -105,6 +105,9 @@ public class Lwjgl3Launcher {
             } else if (key.equals("--out")) {
                 config.outputPath = value;
                 i++;
+            } else if (key.equals("--trace")) {
+                config.tracePath = value;
+                i++;
             }
         }
     }
@@ -147,6 +150,8 @@ public class Lwjgl3Launcher {
         System.out.println("  --diplomacy B      true|false");
         System.out.println("  --max-turns N      потолок ходов, дальше партия считается зависшей");
         System.out.println("  --out PATH         путь к CSV (по умолчанию sim-results/sim.csv)");
+        System.out.println("  --trace PATH       по-ходовой след состояния; diff двух следов");
+        System.out.println("                     показывает ход, на котором прогоны разошлись");
         System.out.println();
         System.out.println("Самопроверка:");
         System.out.println("  --selftest         сериализация и флаги; ненулевой код возврата при провале");

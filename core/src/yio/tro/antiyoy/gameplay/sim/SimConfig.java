@@ -23,6 +23,13 @@ public class SimConfig {
     public int maxTurns;
     public String outputPath;
 
+    /**
+     * Путь к по-ходовому следу состояния. Пустой — след не пишется.
+     * Нужен приёмке этапа 1: обычный diff по этому файлу показывает не
+     * «результаты разошлись», а номер хода, на котором они разошлись.
+     */
+    public String tracePath;
+
 
     private SimConfig() {
         defaultValues();
@@ -50,6 +57,7 @@ public class SimConfig {
         diplomacy = true;
         maxTurns = 400;
         outputPath = "sim-results/sim.csv";
+        tracePath = null;
     }
 
 

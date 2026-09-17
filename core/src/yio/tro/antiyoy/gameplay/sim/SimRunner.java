@@ -35,6 +35,9 @@ public class SimRunner {
     private int leaderShareSamples;
     private int lastSampledTurn;
 
+    private final StringBuilder traceBuilder;
+    private int currentMatchIndex;
+
 
     public SimRunner(YioGdxGame yioGdxGame) {
         this.yioGdxGame = yioGdxGame;
@@ -42,6 +45,7 @@ public class SimRunner {
         this.config = SimConfig.getInstance();
 
         results = new ArrayList<SimMatchResult>();
+        traceBuilder = new StringBuilder();
     }
 
 
@@ -61,6 +65,7 @@ public class SimRunner {
         DebugFlags.testMode = false;
 
         writeCsv();
+        writeTrace();
         showSummary(System.currentTimeMillis() - startTime);
     }
 
@@ -75,6 +80,8 @@ public class SimRunner {
 
     private SimMatchResult runSingleMatch(int matchIndex) {
         long matchSeed = config.getMatchSeed(matchIndex);
+
+        currentMatchIndex = matchIndex;
 
         seedRandomSources(matchSeed);
         launchMatch(matchSeed);
@@ -185,6 +192,22 @@ public class SimRunner {
 
         sampleMoney();
         sampleLeaderMapShare();
+        sampleTrace(turnsMade);
+    }
+
+
+    /**
+     * Строка следа на каждый ход. Обычный diff двух таких файлов показывает
+     * ход, на котором прогоны разошлись.
+     */
+    private void sampleTrace(int turnsMade) {
+        if (config.tracePath == null) return;
+
+        traceBuilder.append(currentMatchIndex).append(',')
+                .append(turnsMade).append(',')
+                .append(SimStateHash.computeField(gameController)).append(',')
+                .append(SimStateHash.computeDiplomacy(gameController))
+                .append('\n');
     }
 
 
@@ -246,6 +269,9 @@ public class SimRunner {
         result.unitsDied = statistics.unitsDied;
         result.maxMoney = maxMoney;
 
+        result.fieldHash = SimStateHash.computeField(gameController);
+        result.diplomacyHash = SimStateHash.computeDiplomacy(gameController);
+
         if (leaderShareSamples > 0) {
             result.averageLeaderMapShare = leaderShareSum / leaderShareSamples;
         }
@@ -253,7 +279,29 @@ public class SimRunner {
 
 
     private void writeCsv() {
-        File file = new File(config.outputPath);
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(SimMatchResult.getCsvHeader(config.fractionsQuantity)).append('\n');
+
+        for (SimMatchResult result : results) {
+            builder.append(result.toCsvRow()).append('\n');
+        }
+
+        writeTextFile(config.outputPath, builder.toString(), "CSV");
+    }
+
+
+    private void writeTrace() {
+        if (config.tracePath == null) return;
+
+        String header = "match,turn,field_hash,diplomacy_hash\n";
+
+        writeTextFile(config.tracePath, header + traceBuilder.toString(), "Trace");
+    }
+
+
+    private void writeTextFile(String path, String content, String label) {
+        File file = new File(path);
 
         File parent = file.getParentFile();
         if (parent != null && !parent.exists()) {
@@ -263,17 +311,11 @@ public class SimRunner {
         Writer writer = null;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-
-            writer.write(SimMatchResult.getCsvHeader(config.fractionsQuantity));
-            writer.write("\n");
-
-            for (SimMatchResult result : results) {
-                writer.write(result.toCsvRow());
-                writer.write("\n");
-            }
+            writer.write(content);
         } catch (Exception exception) {
-            System.out.println("SimRunner: failed to write CSV");
+            System.out.println("SimRunner: failed to write " + label);
             exception.printStackTrace();
+            return;
         } finally {
             if (writer != null) {
                 try {
@@ -283,7 +325,7 @@ public class SimRunner {
             }
         }
 
-        System.out.println("CSV written: " + file.getAbsolutePath());
+        System.out.println(label + " written: " + file.getAbsolutePath());
     }
 
 

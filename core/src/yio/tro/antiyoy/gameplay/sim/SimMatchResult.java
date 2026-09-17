@@ -19,6 +19,10 @@ public class SimMatchResult {
     public int maxMoney[];
     public double averageLeaderMapShare;
 
+    /** Контрольные суммы конечного состояния. Приёмка этапа 1. */
+    public long fieldHash;
+    public long diplomacyHash;
+
 
     public SimMatchResult(int fractionsQuantity) {
         maxMoney = new int[fractionsQuantity];
@@ -34,7 +38,7 @@ public class SimMatchResult {
 
         builder.append("match,seed,winner,timed_out,turns,wars_declared,contracts_signed,")
                 .append("friendships_broken,units_produced,units_died,seceded_regions,")
-                .append("avg_leader_map_share");
+                .append("avg_leader_map_share,field_hash,diplomacy_hash");
 
         for (int i = 0; i < fractionsQuantity; i++) {
             builder.append(",max_money_").append(i);
@@ -58,7 +62,9 @@ public class SimMatchResult {
                 .append(unitsProduced).append(',')
                 .append(unitsDied).append(',')
                 .append(secededRegions).append(',')
-                .append(String.format(java.util.Locale.US, "%.4f", averageLeaderMapShare));
+                .append(String.format(java.util.Locale.US, "%.4f", averageLeaderMapShare)).append(',')
+                .append(fieldHash).append(',')
+                .append(diplomacyHash);
 
         for (int money : maxMoney) {
             builder.append(',').append(money);

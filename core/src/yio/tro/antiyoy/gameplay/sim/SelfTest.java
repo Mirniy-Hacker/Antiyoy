@@ -3,6 +3,8 @@ package yio.tro.antiyoy.gameplay.sim;
 import yio.tro.antiyoy.YioGdxGame;
 import yio.tro.antiyoy.gameplay.DebugFlags;
 import yio.tro.antiyoy.gameplay.GameController;
+import yio.tro.antiyoy.gameplay.Hex;
+import yio.tro.antiyoy.gameplay.Province;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyInfoCondensed;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyManager;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyTuning;
@@ -44,6 +46,7 @@ public class SelfTest {
 
         prepareMatch();
 
+        checkStateHashSensitivity();
         checkVersionPrefix();
         checkRoundTrip();
         checkLegacySaveLoads();
@@ -206,6 +209,62 @@ public class SelfTest {
         instance.update(getDiplomacyManager());
 
         return instance.getFull();
+    }
+
+
+    /**
+     * Контрольная сумма, которая всегда говорит «совпало», бесполезна.
+     * Здесь проверяется, что она устойчива к повторному вызову и при этом
+     * реагирует на изменение состояния — в том числе на единственный гекс.
+     */
+    private void checkStateHashSensitivity() {
+        long first = SimStateHash.computeField(gameController);
+        long second = SimStateHash.computeField(gameController);
+
+        check("хеш состояния устойчив при повторном вызове", first == second);
+
+        Hex hex = findAnyOwnedHex();
+        if (hex == null) {
+            check("нашёлся гекс для проверки чувствительности хеша", false);
+            return;
+        }
+
+        int savedFraction = hex.fraction;
+        hex.fraction = savedFraction == 0 ? 1 : 0;
+        long mutated = SimStateHash.computeField(gameController);
+        hex.fraction = savedFraction;
+
+        check("хеш ловит смену владельца одного гекса", mutated != first);
+
+        check("хеш возвращается к прежнему после отката правки",
+                SimStateHash.computeField(gameController) == first);
+
+        // Казна провинции в состояние входит: этап 2 меняет именно её.
+        Province province = gameController.fieldManager.provinces.size() > 0
+                ? gameController.fieldManager.provinces.get(0)
+                : null;
+
+        if (province == null) {
+            check("нашлась провинция для проверки хеша казны", false);
+            return;
+        }
+
+        int savedMoney = province.money;
+        province.money = savedMoney + 1;
+        long moneyMutated = SimStateHash.computeField(gameController);
+        province.money = savedMoney;
+
+        check("хеш ловит изменение казны провинции", moneyMutated != first);
+    }
+
+
+    private Hex findAnyOwnedHex() {
+        for (Hex hex : gameController.fieldManager.activeHexes) {
+            if (hex.isNeutral()) continue;
+            return hex;
+        }
+
+        return null;
     }
 
 
