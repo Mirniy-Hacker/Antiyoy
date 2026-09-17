@@ -102,4 +102,159 @@ public class GameRules {
     public static void setDiplomaticRelationsLocked(boolean diplomaticRelationsLocked) {
         GameRules.diplomaticRelationsLocked = diplomaticRelationsLocked;
     }
+
+
+    // ==================================================================
+    // Флаги мода. Спека, часть X: каждая механика включается отдельным
+    // флагом, раздельно для обычного режима и slay. Старое поведение
+    // остаётся доступным для сравнения, поэтому по умолчанию всё выключено.
+    //
+    // Флаги сознательно не сбрасываются в defaultValues(): это конфигурация
+    // прогона, а не состояние матча, и загрузка уровня их не трогает.
+    // Сохраняются отдельно, через GameSaver.
+    // ==================================================================
+
+    public static final int MODE_GENERIC = 0;
+    public static final int MODE_SLAY = 1;
+    public static final int MODES_QUANTITY = 2;
+
+    /** Этап 2: потолок казны и утечка излишка. */
+    public static boolean modTreasuryCap[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 2: удорожание найма внутри хода. */
+    public static boolean modUnitPriceGrowth[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 4: нарезка на регионы и лояльность. */
+    public static boolean modRegions[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 5: волнения, отделение, новые государства. */
+    public static boolean modSecession[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 6: мнение, доверие, репутация, пороги вместо рандома. */
+    public static boolean modOpinion[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 7: осмысленные сделки по земле. */
+    public static boolean modLandDeals[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 8: характеры. */
+    public static boolean modPersonalities[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 9: новые дипломатические действия. */
+    public static boolean modDiplomaticActions[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 10: координация ИИ в коалиции. */
+    public static boolean modAiCoordination[] = new boolean[MODES_QUANTITY];
+
+    /** Этап 3: липкий режим постройки, долгий тап, автофермы. */
+    public static boolean modUiImprovements[] = new boolean[MODES_QUANTITY];
+
+    /** Ключи сохранения, в том же порядке, что и getAllModFlags(). */
+    public static final String MOD_FLAG_KEYS[] = {
+            "mod_treasury_cap",
+            "mod_unit_price_growth",
+            "mod_regions",
+            "mod_secession",
+            "mod_opinion",
+            "mod_land_deals",
+            "mod_personalities",
+            "mod_diplomatic_actions",
+            "mod_ai_coordination",
+            "mod_ui_improvements",
+    };
+
+
+    public static int getCurrentModeIndex() {
+        return slayRules ? MODE_SLAY : MODE_GENERIC;
+    }
+
+
+    private static boolean isEnabled(boolean flags[]) {
+        return flags[getCurrentModeIndex()];
+    }
+
+
+    public static boolean isTreasuryCapEnabled() {
+        return isEnabled(modTreasuryCap);
+    }
+
+
+    public static boolean isUnitPriceGrowthEnabled() {
+        return isEnabled(modUnitPriceGrowth);
+    }
+
+
+    public static boolean areRegionsEnabled() {
+        return isEnabled(modRegions);
+    }
+
+
+    public static boolean isSecessionEnabled() {
+        return isEnabled(modSecession);
+    }
+
+
+    public static boolean isOpinionEnabled() {
+        return isEnabled(modOpinion);
+    }
+
+
+    public static boolean areLandDealsEnabled() {
+        return isEnabled(modLandDeals);
+    }
+
+
+    public static boolean arePersonalitiesEnabled() {
+        return isEnabled(modPersonalities);
+    }
+
+
+    public static boolean areDiplomaticActionsEnabled() {
+        return isEnabled(modDiplomaticActions);
+    }
+
+
+    public static boolean isAiCoordinationEnabled() {
+        return isEnabled(modAiCoordination);
+    }
+
+
+    public static boolean areUiImprovementsEnabled() {
+        return isEnabled(modUiImprovements);
+    }
+
+
+    /**
+     * Порядок обязан совпадать с MOD_FLAG_KEYS: по нему идёт сохранение.
+     */
+    public static boolean[][] getAllModFlags() {
+        return new boolean[][]{
+                modTreasuryCap,
+                modUnitPriceGrowth,
+                modRegions,
+                modSecession,
+                modOpinion,
+                modLandDeals,
+                modPersonalities,
+                modDiplomaticActions,
+                modAiCoordination,
+                modUiImprovements,
+        };
+    }
+
+
+    /**
+     * Все механики мода разом, для обоих режимов. Нужно прогонам автоматчей
+     * и отладке.
+     */
+    public static void setAllModFlags(boolean value) {
+        for (boolean flags[] : getAllModFlags()) {
+            flags[MODE_GENERIC] = value;
+            flags[MODE_SLAY] = value;
+        }
+    }
+
+
+    public static void defaultModFlags() {
+        setAllModFlags(false);
+    }
 }

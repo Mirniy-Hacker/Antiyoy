@@ -68,6 +68,7 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     double bubbleGravity;
     boolean loadedResources;
     private boolean simulationPerformed;
+    private static int simulationExitCode;
     boolean ignoreDrag;
     public boolean simpleTransitionAnimation, useMenuMasks;
     TextureRegion splash;
@@ -531,9 +532,22 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         if (simulationPerformed) return;
         simulationPerformed = true;
 
-        new SimRunner(this).perform();
+        if (SimConfig.getInstance().selfTest) {
+            boolean success = new yio.tro.antiyoy.gameplay.sim.SelfTest(this).perform();
+            simulationExitCode = success ? 0 : 1;
+        } else {
+            new SimRunner(this).perform();
+        }
 
         Gdx.app.exit();
+    }
+
+
+    /**
+     * Код возврата процесса: нужен, чтобы самопроверка валила сборку в CI.
+     */
+    public static int getSimulationExitCode() {
+        return simulationExitCode;
     }
 
     private void onCatchedExceptionInMove(Exception exception) {

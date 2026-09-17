@@ -42,6 +42,10 @@ run {
   // Оригинал ищет ассеты относительно рабочего каталога.
   workingDir = rootProject.file('assets').path
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
+  // Иначе вывод в консоль Windows идёт в кодировке страницы и кириллица бьётся.
+  jvmArgs += '-Dfile.encoding=UTF-8'
+  jvmArgs += '-Dsun.stdout.encoding=UTF-8'
+  jvmArgs += '-Dsun.stderr.encoding=UTF-8'
   if (os.contains('mac')) jvmArgs += '-XstartOnFirstThread'
   // Аргументы командной строки пробрасываются в игру: нужно для --sim.
   if (project.hasProperty('args')) {

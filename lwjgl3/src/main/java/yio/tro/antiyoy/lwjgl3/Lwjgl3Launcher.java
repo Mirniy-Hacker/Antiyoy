@@ -24,6 +24,12 @@ public class Lwjgl3Launcher {
         parseArguments(args);
 
         new Lwjgl3Application(new YioGdxGame(), createConfiguration());
+
+        // Lwjgl3Application возвращает управление после Gdx.app.exit().
+        // Самопроверка обязана валить процесс, иначе она бесполезна в CI.
+        if (SimConfig.getInstance().selfTest) {
+            System.exit(YioGdxGame.getSimulationExitCode());
+        }
     }
 
 
@@ -59,6 +65,13 @@ public class Lwjgl3Launcher {
             if (key.equals("--help") || key.equals("-h")) {
                 showUsage();
                 System.exit(0);
+            }
+
+            // Ключи без значения обрабатываются до проверки на следующий аргумент.
+            if (key.equals("--selftest")) {
+                config.enabled = true;
+                config.selfTest = true;
+                continue;
             }
 
             String value = (i + 1 < args.length) ? args[i + 1] : null;
@@ -134,5 +147,8 @@ public class Lwjgl3Launcher {
         System.out.println("  --diplomacy B      true|false");
         System.out.println("  --max-turns N      потолок ходов, дальше партия считается зависшей");
         System.out.println("  --out PATH         путь к CSV (по умолчанию sim-results/sim.csv)");
+        System.out.println();
+        System.out.println("Самопроверка:");
+        System.out.println("  --selftest         сериализация и флаги; ненулевой код возврата при провале");
     }
 }

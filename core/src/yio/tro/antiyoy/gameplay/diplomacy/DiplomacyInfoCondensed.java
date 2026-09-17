@@ -10,6 +10,17 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
     private static DiplomacyInfoCondensed instance;
 
+    /**
+     * Префикс версии формата (SPEC, часть X). Сейвы оригинала его не имеют и
+     * читаются как VERSION_LEGACY с подстановкой умолчаний.
+     */
+    public static final String VERSION_PREFIX = "v2/";
+
+    public static final int VERSION_LEGACY = 1;
+    public static final int VERSION_CURRENT = 2;
+
+    private int loadedVersion;
+
     String full;
     String relations;
     String contracts;
@@ -44,6 +55,7 @@ public class DiplomacyInfoCondensed implements ReusableYio {
     @Override
     public void reset() {
         full = null;
+        loadedVersion = VERSION_CURRENT;
         relations = null;
         diplomacyManager = null;
         contracts = null;
@@ -133,16 +145,25 @@ public class DiplomacyInfoCondensed implements ReusableYio {
     public void apply(DiplomacyManager diplomacyManager) {
         this.diplomacyManager = diplomacyManager;
 
-        if (full.equals("-")) return;
+        if (full == null) return;
+        if (stripVersionPrefix(full).equals("-")) return;
 
-        diplomacyManager.clearCooldowns();
-        diplomacyManager.clearContracts();
-        applyFull();
-        applyRelations();
-        applyContracts();
-        applyCooldowns();
-        applyMessages();
-        applyDebts();
+        // Восстановление заново прогоняет setRelation и addContract, а они
+        // ведут счётчики статистики. Без этого флага отмена хода и загрузка
+        // сейва накручивали бы число войн и сделок.
+        diplomacyManager.restoringState = true;
+        try {
+            diplomacyManager.clearCooldowns();
+            diplomacyManager.clearContracts();
+            applyFull();
+            applyRelations();
+            applyContracts();
+            applyCooldowns();
+            applyMessages();
+            applyDebts();
+        } finally {
+            diplomacyManager.restoringState = false;
+        }
 
         diplomacyManager.onRelationsChanged();
     }
@@ -262,10 +283,15 @@ public class DiplomacyInfoCondensed implements ReusableYio {
             contract = diplomacyManager.addContract(type, entity1, entity2);
         }
 
-        if (contract.one != entity1) {
-            // need to swap
-            dotations *= -1;
-        }
+        // Стороны восстанавливаются в том же порядке, в каком были записаны.
+        //
+        // Оригинал полагался на то, что addContract кладёт их наоборот, и
+        // компенсировал это сменой знака дотаций. По смыслу это одно и то же
+        // (getDotationsFromEntityPerspective симметричен), но строка при
+        // каждом цикле сохранения зеркалилась, и сравнить два сейва побайтово
+        // было нельзя. Для приёмки этапа 1 это обязательное свойство.
+        contract.setOne(entity1);
+        contract.setTwo(entity2);
 
         contract.setDotations(dotations);
         contract.setExpireCountDown(expire);
@@ -273,13 +299,24 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
 
     private void applyFull() {
-        String[] split = full.split("#");
+        String payload = stripVersionPrefix(full);
 
-        relations = split[0];
-        contracts = split[1];
+        String[] split = payload.split("#");
+
+        relations = null;
+        contracts = null;
         cooldowns = null;
         messages = null;
         debts = null;
+
+        // Секции читаются по одной, с выходом на первой недостающей: так
+        // формат остаётся совместимым и вперёд, и назад. Старый сейв без
+        // префикса просто не содержит хвостовых секций, и они остаются null.
+        if (split.length < 1) return;
+        relations = split[0];
+
+        if (split.length < 2) return;
+        contracts = split[1];
 
         if (split.length < 3) return;
         cooldowns = split[2];
@@ -292,8 +329,41 @@ public class DiplomacyInfoCondensed implements ReusableYio {
     }
 
 
+    /**
+     * Снимает префикс версии и запоминает, какая версия пришла.
+     *
+     * Сейвы до мода префикса не имеют — они читаются как версия 1.
+     */
+    private String stripVersionPrefix(String source) {
+        if (source == null) {
+            loadedVersion = VERSION_LEGACY;
+            return "";
+        }
+
+        if (source.startsWith(VERSION_PREFIX)) {
+            loadedVersion = VERSION_CURRENT;
+            return source.substring(VERSION_PREFIX.length());
+        }
+
+        loadedVersion = VERSION_LEGACY;
+        return source;
+    }
+
+
+    /**
+     * Версия последней прочитанной строки. Нужна загрузчику, чтобы понимать,
+     * каким полям подставлять умолчания.
+     */
+    public int getLoadedVersion() {
+        return loadedVersion;
+    }
+
+
     private void updateFull() {
-        full = relations + "#" +
+        // Новые секции дописываются в конец: загрузчик читает их по одной и
+        // выходит на первой недостающей, поэтому старые сейвы не ломаются.
+        full = VERSION_PREFIX +
+                relations + "#" +
                 contracts + "#" +
                 cooldowns + "#" +
                 messages + "#" +

@@ -54,6 +54,25 @@ public class GameSaver {
         }
         prefs.putBoolean("editor_color_fix_applied", GameRules.editorColorFixApplied);
         prefs.putBoolean("lock_relations", GameRules.diplomaticRelationsLocked);
+
+        saveModFlags();
+    }
+
+
+    /**
+     * Флаги мода пишутся парой ключей на механику: отдельно для обычного
+     * режима и для slay. В сейвах до мода этих ключей нет, и загрузчик
+     * подставит false, то есть исходное поведение игры.
+     */
+    private void saveModFlags() {
+        boolean allFlags[][] = GameRules.getAllModFlags();
+
+        for (int i = 0; i < allFlags.length; i++) {
+            String key = GameRules.MOD_FLAG_KEYS[i];
+
+            prefs.putBoolean(key + "_generic", allFlags[i][GameRules.MODE_GENERIC]);
+            prefs.putBoolean(key + "_slay", allFlags[i][GameRules.MODE_SLAY]);
+        }
     }
 
 

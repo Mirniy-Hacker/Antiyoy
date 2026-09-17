@@ -35,6 +35,16 @@ public class DiplomacyManager {
     public DiplomaticAI diplomaticAI;
     public ExchangePerformer exchangePerformer;
 
+    /**
+     * Поднят, пока состояние восстанавливается из сохранённой строки.
+     *
+     * Восстановление заново прогоняет setRelation и addContract, поэтому без
+     * этого флага статистика матча накручивалась бы при каждой отмене хода и
+     * при каждой загрузке. В LevelSnapshot.recreate() статистика вдобавок
+     * восстанавливается раньше дипломатии, так что порядок не спасает.
+     */
+    public boolean restoringState;
+
 
     public DiplomacyManager(FieldManager fieldManager) {
         this.fieldManager = fieldManager;
@@ -1218,7 +1228,11 @@ public class DiplomacyManager {
         next.setExpireCountDown(DiplomaticContract.getDurationByType(contractType));
 
         contracts.add(next);
-        fieldManager.gameController.matchStatistics.onContractSigned();
+
+        if (!restoringState) {
+            fieldManager.gameController.matchStatistics.onContractSigned();
+        }
+
         return next;
     }
 
@@ -1352,7 +1366,9 @@ public class DiplomacyManager {
         resetDebtsBetweenEntities(initiator, entity);
         removeDotationsBetweenEntities(initiator, entity);
 
-        fieldManager.gameController.matchStatistics.onWarDeclared();
+        if (!restoringState) {
+            fieldManager.gameController.matchStatistics.onWarDeclared();
+        }
 
         onRelationsChanged();
         return true;

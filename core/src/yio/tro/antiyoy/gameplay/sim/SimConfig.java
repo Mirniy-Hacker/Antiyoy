@@ -12,6 +12,7 @@ public class SimConfig {
     private static SimConfig instance;
 
     public boolean enabled;
+    public boolean selfTest;
     public int matches;
     public long seed;
     public int fractionsQuantity;
@@ -39,6 +40,7 @@ public class SimConfig {
 
     public void defaultValues() {
         enabled = false;
+        selfTest = false;
         matches = 100;
         seed = 0;
         fractionsQuantity = 5;

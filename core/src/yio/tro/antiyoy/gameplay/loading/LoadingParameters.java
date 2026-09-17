@@ -164,5 +164,24 @@ public class LoadingParameters {
         ulKey = prefs.getString("ul_key", null);
         editorColorFixApplied = prefs.getBoolean("editor_color_fix_applied", false);
         diplomaticRelationsLocked = prefs.getBoolean("lock_relations", false);
+
+        loadModFlags(prefs);
+    }
+
+
+    /**
+     * Флаги мода не относятся к состоянию матча, поэтому кладутся сразу в
+     * GameRules, как это уже делается для campaignMode. Отсутствующий ключ
+     * даёт false: сейв, сделанный до мода, вернёт исходное поведение игры.
+     */
+    private void loadModFlags(Preferences prefs) {
+        boolean allFlags[][] = GameRules.getAllModFlags();
+
+        for (int i = 0; i < allFlags.length; i++) {
+            String key = GameRules.MOD_FLAG_KEYS[i];
+
+            allFlags[i][GameRules.MODE_GENERIC] = prefs.getBoolean(key + "_generic", false);
+            allFlags[i][GameRules.MODE_SLAY] = prefs.getBoolean(key + "_slay", false);
+        }
     }
 }
