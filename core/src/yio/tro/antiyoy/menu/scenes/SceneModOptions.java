@@ -8,10 +8,16 @@ import yio.tro.antiyoy.menu.CheckButtonYio;
 import yio.tro.antiyoy.menu.MenuControllerYio;
 import yio.tro.antiyoy.menu.behaviors.Reaction;
 
+import java.util.ArrayList;
+
 /**
  * Включение механик мода. Спека, введение: старое поведение обязано
  * оставаться доступным, поэтому каждая механика — отдельный флаг, а не
  * один общий переключатель.
+ *
+ * Показываются только готовые механики: остальные ключи заведены заранее и
+ * пока ничего не меняют, см. GameRules.MOD_FLAG_READY. Переключатель без
+ * последствий хуже его отсутствия.
  *
  * Флаги в GameRules заведены раздельно для обычного режима и slay, но здесь
  * на механику приходится одна строка и ставятся сразу оба: два десятка
@@ -22,12 +28,21 @@ public class SceneModOptions extends AbstractScene {
 
     private static final int BASE_ID = 6000;
 
-    /** Высота строки: десять механик обязаны поместиться на один экран. */
+    /** Высота строки: механики обязаны поместиться на один экран. */
     private static final double ROW_HEIGHT = 0.062;
+
+    /** Верх панели, отступы внутри неё и высота кнопки. */
+    private static final double TOP = 0.86;
+    private static final double PADDING = 0.03;
+    private static final double BUTTON_HEIGHT = 0.07;
 
     private ButtonYio label;
     private ButtonYio switchAllButton;
     private CheckButtonYio checks[];
+
+    /** Номера показанных механик в GameRules.getAllModFlags(). */
+    private int shownFlags[];
+    private double labelY;
 
 
     public SceneModOptions(MenuControllerYio menuControllerYio) {
@@ -42,6 +57,8 @@ public class SceneModOptions extends AbstractScene {
         menuControllerYio.beginMenuCreation();
         menuControllerYio.getYioGdxGame().beginBackgroundChange(2, true, true);
         menuControllerYio.spawnBackButton(BASE_ID, getBackReaction());
+
+        shownFlags = getReadyFlags();
 
         createLabel();
         createChecks();
@@ -66,8 +83,16 @@ public class SceneModOptions extends AbstractScene {
     }
 
 
+    /**
+     * Панель подгоняется под число строк: готовых механик пока
+     * меньше, чем заведённых ключей, и пустая половина экрана
+     * выглядела бы поломкой.
+     */
     private void createLabel() {
-        label = buttonFactory.getButton(generateRectangle(0.05, 0.1, 0.9, 0.76), BASE_ID + 1, " ");
+        double height = 2 * PADDING + shownFlags.length * ROW_HEIGHT + BUTTON_HEIGHT + PADDING;
+        labelY = TOP - height;
+
+        label = buttonFactory.getButton(generateRectangle(0.05, labelY, 0.9, height), BASE_ID + 1, " ");
         label.setTouchable(false);
         label.setAnimation(Animation.fixed_up);
     }
@@ -85,7 +110,7 @@ public class SceneModOptions extends AbstractScene {
     private void initChecks() {
         if (checks != null) return;
 
-        checks = new CheckButtonYio[GameRules.MOD_FLAG_KEYS.length];
+        checks = new CheckButtonYio[shownFlags.length];
 
         for (int i = 0; i < checks.length; i++) {
             CheckButtonYio check = CheckButtonYio.getFreshCheckButton(menuControllerYio);
@@ -93,12 +118,12 @@ public class SceneModOptions extends AbstractScene {
             check.setHeight(ROW_HEIGHT);
 
             if (i == 0) {
-                check.alignTop(0.03);
+                check.alignTop(PADDING);
             } else {
                 check.alignUnderPreviousElement();
             }
 
-            check.setTitle(GameRules.MOD_FLAG_KEYS[i]);
+            check.setTitle(GameRules.MOD_FLAG_KEYS[shownFlags[i]]);
             check.centerHorizontal(0.05);
 
             checks[i] = check;
@@ -106,12 +131,30 @@ public class SceneModOptions extends AbstractScene {
     }
 
 
+    private int[] getReadyFlags() {
+        ArrayList<Integer> ready = new ArrayList<Integer>();
+
+        for (int i = 0; i < GameRules.MOD_FLAG_KEYS.length; i++) {
+            if (!GameRules.MOD_FLAG_READY[i]) continue;
+
+            ready.add(i);
+        }
+
+        int result[] = new int[ready.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = ready.get(i);
+        }
+
+        return result;
+    }
+
+
     /**
      * Включить или выключить всё разом: обычно игрок хочет либо мод, либо
-     * исходную игру, а не выборку из десяти галочек.
+     * исходную игру, а не выборку из галочек.
      */
     private void createSwitchAllButton() {
-        switchAllButton = buttonFactory.getButton(generateRectangle(0.15, 0.13, 0.7, 0.07), BASE_ID + 2, getString("mod_switch_all"));
+        switchAllButton = buttonFactory.getButton(generateRectangle(0.15, labelY + PADDING, 0.7, BUTTON_HEIGHT), BASE_ID + 2, getString("mod_switch_all"));
         switchAllButton.setReaction(getSwitchAllReaction());
         switchAllButton.setAnimation(Animation.down);
     }
@@ -144,7 +187,7 @@ public class SceneModOptions extends AbstractScene {
         boolean allFlags[][] = GameRules.getAllModFlags();
 
         for (int i = 0; i < checks.length; i++) {
-            checks[i].setChecked(allFlags[i][GameRules.MODE_GENERIC]);
+            checks[i].setChecked(allFlags[shownFlags[i]][GameRules.MODE_GENERIC]);
         }
     }
 
@@ -153,8 +196,8 @@ public class SceneModOptions extends AbstractScene {
         boolean allFlags[][] = GameRules.getAllModFlags();
 
         for (int i = 0; i < checks.length; i++) {
-            allFlags[i][GameRules.MODE_GENERIC] = checks[i].isChecked();
-            allFlags[i][GameRules.MODE_SLAY] = checks[i].isChecked();
+            allFlags[shownFlags[i]][GameRules.MODE_GENERIC] = checks[i].isChecked();
+            allFlags[shownFlags[i]][GameRules.MODE_SLAY] = checks[i].isChecked();
         }
     }
 }

@@ -182,6 +182,33 @@ public class GameRules {
     };
 
 
+    /**
+     * Механики, за которыми уже есть реализация.
+     *
+     * Остальные ключи заведены заранее: они попадают в сейв и
+     * принимаются ключом --mod, но пока ничего не меняют, и в меню
+     * им не место — переключатель без последствий хуже его отсутствия.
+     *
+     * Отделение реализовано, но скрыто намеренно: отделившиеся
+     * государства не получают хода и ломают определение победителя.
+     * Ход партии перебирает фракции, а не живых владельцев.
+     *
+     * Порядок обязан совпадать с MOD_FLAG_KEYS.
+     */
+    public static final boolean MOD_FLAG_READY[] = {
+            true,   // mod_treasury_cap
+            true,   // mod_unit_price_growth
+            true,   // mod_regions
+            false,  // mod_secession — ломает определение победителя
+            false,  // mod_opinion — этап 6
+            false,  // mod_land_deals — этап 7
+            false,  // mod_personalities — этап 8
+            false,  // mod_diplomatic_actions — этап 9
+            false,  // mod_ai_coordination — этап 10
+            true,   // mod_ui_improvements
+    };
+
+
     public static int getCurrentModeIndex() {
         return slayRules ? MODE_SLAY : MODE_GENERIC;
     }

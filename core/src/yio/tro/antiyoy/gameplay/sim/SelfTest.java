@@ -262,6 +262,9 @@ public class SelfTest {
 
         check("число ключей совпадает с числом флагов",
                 GameRules.MOD_FLAG_KEYS.length == GameRules.getAllModFlags().length);
+
+        check("список готовых механик той же длины",
+                GameRules.MOD_FLAG_KEYS.length == GameRules.MOD_FLAG_READY.length);
     }
 
 
