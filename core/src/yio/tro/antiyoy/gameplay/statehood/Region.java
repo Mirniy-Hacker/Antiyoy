@@ -20,11 +20,11 @@ public class Region {
     public Province province;
     public String name;
 
-    /** Приоритет в бюджете провинции: низкий, обычный, высокий (3.3). */
-    public int priority;
-
     /** Сколько ходов подряд лояльность держится ниже порога волнений (3.4). */
     public int lowLoyaltyTurns;
+
+    /** Ход последней разовой выплаты: она доступна не чаще раза в N ходов (3.3). */
+    public int lastInstantPaymentTurn;
 
     /** Разбивка последнего пересчёта: причина -> вклад. Нужна карточке (3.2). */
     public final ArrayList<String> lastReasons;
@@ -38,8 +38,46 @@ public class Region {
         lastReasons = new ArrayList<String>();
         lastValues = new ArrayList<Integer>();
 
-        priority = StatehoodTuning.PRIORITY_NORMAL;
         lowLoyaltyTurns = 0;
+        lastInstantPaymentTurn = -StatehoodTuning.instantPaymentCooldown;
+    }
+
+
+    /**
+     * Приоритет хранится на гексах: объект региона пересоздаётся при каждой
+     * нарезке, и всё, что должно пережить её, лежит на них.
+     */
+    public int getPriority() {
+        if (hexList.size() == 0) return StatehoodTuning.PRIORITY_NORMAL;
+
+        return hexList.get(0).regionPriority;
+    }
+
+
+    public void setPriority(int priority) {
+        for (Hex hex : hexList) {
+            hex.regionPriority = priority;
+        }
+    }
+
+
+    /**
+     * Переключение по кругу: низкий, обычный, высокий. Спека, 3.3 — один тап
+     * по карточке региона.
+     */
+    public void switchPriority() {
+        setPriority((getPriority() + 1) % StatehoodTuning.PRIORITIES_QUANTITY);
+    }
+
+
+    public int getPriorityWeight() {
+        int priority = getPriority();
+
+        if (priority < 0 || priority >= StatehoodTuning.priorityWeights.length) {
+            return StatehoodTuning.priorityWeights[StatehoodTuning.PRIORITY_NORMAL];
+        }
+
+        return StatehoodTuning.priorityWeights[priority];
     }
 
 

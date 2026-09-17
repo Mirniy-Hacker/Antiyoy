@@ -9,6 +9,7 @@ import yio.tro.antiyoy.gameplay.LevelSize;
 import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.gameplay.sim.SimConfig;
+import yio.tro.antiyoy.gameplay.statehood.StatehoodTuning;
 
 /**
  * Десктопная точка входа. Оригинал собирался через сгенерированный
@@ -183,6 +184,7 @@ public class Lwjgl3Launcher {
             float number = Float.parseFloat(parts[1].trim());
 
             if (EconomyTuning.setByName(name, number)) continue;
+            if (StatehoodTuning.setByName(name, number)) continue;
 
             System.out.println("Неизвестное число настройки: " + name);
             System.exit(2);

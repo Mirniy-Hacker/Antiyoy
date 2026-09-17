@@ -22,7 +22,9 @@ import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.gameplay.rules.Ruleset;
 import yio.tro.antiyoy.gameplay.rules.RulesetGeneric;
 import yio.tro.antiyoy.gameplay.rules.RulesetSlay;
+import yio.tro.antiyoy.gameplay.statehood.ProvinceBudget;
 import yio.tro.antiyoy.gameplay.statehood.RegionManager;
+import yio.tro.antiyoy.gameplay.statehood.StatehoodAi;
 import yio.tro.antiyoy.gameplay.touch_mode.TouchMode;
 import yio.tro.antiyoy.menu.ButtonYio;
 import yio.tro.antiyoy.menu.scenes.Scenes;
@@ -85,6 +87,8 @@ public class GameController {
     public LevelSizeManager levelSizeManager;
     public ColorsManager colorsManager;
     public RegionManager regionManager;
+    public ProvinceBudget provinceBudget;
+    public StatehoodAi statehoodAi;
     public EncodeManager encodeManager;
     public DecodeManager decodeManager;
     public ImportManager importManager;
@@ -114,6 +118,8 @@ public class GameController {
         encodeManager = new EncodeManager(this);
         colorsManager = new ColorsManager(this);
         regionManager = new RegionManager(this);
+        provinceBudget = new ProvinceBudget(this);
+        statehoodAi = new StatehoodAi(this);
         mapGeneratorSlay = new MapGenerator(this);
         convertedTouchPoint = new PointYio();
         mapGeneratorGeneric = new MapGeneratorGeneric(this);
@@ -512,6 +518,14 @@ public class GameController {
 
         prepareCertainUnitsToMove();
         fieldManager.transformGraves(); // this must be called before 'check for bankrupts' and after 'expand trees'
+        // Порядок важен: ИИ расставляет приоритеты, затем платятся дотации,
+        // и только потом лояльность пересчитывается за ход.
+        if (!isPlayerTurn()) {
+            statehoodAi.makeDecisions(turn);
+        }
+
+        payDotationsForCurrentFraction();
+
         regionManager.updateLoyaltyForFraction(turn);
         collectTributesAndPayTaxes();
         checkForStarvation();
@@ -589,6 +603,19 @@ public class GameController {
      * Единственная точка начисления дохода в игре — отсюда и единственная
      * точка утечки.
      */
+    /**
+     * Дотации регионам текущего игрока. Спека, 3.3: постоянная статья
+     * расходов, которой в исходной игре не было вовсе.
+     */
+    private void payDotationsForCurrentFraction() {
+        for (Province province : fieldManager.provinces) {
+            if (!isCurrentTurn(province.getFraction())) continue;
+
+            provinceBudget.payDotations(province);
+        }
+    }
+
+
     private void applyTreasuryLeak(Province province) {
         if (!GameRules.isTreasuryCapEnabled()) return;
 

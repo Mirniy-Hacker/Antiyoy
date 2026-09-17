@@ -63,6 +63,8 @@ public class StatehoodTuning {
     public static final int PRIORITY_NORMAL = 1;
     public static final int PRIORITY_HIGH = 2;
 
+    public static final int PRIORITIES_QUANTITY = 3;
+
     /** Веса деления бюджета провинции по приоритетам: 1 / 2 / 4. */
     public static int priorityWeights[];
 
@@ -188,6 +190,52 @@ public class StatehoodTuning {
     /** Резерв, который ИИ не тратит на дотации: caution * aiReserveFactor * income. */
     public static float aiReserveFactor;
 
+    /** Ниже этой лояльности ИИ переходит на умиротворение. */
+    public static int aiAppeasementThreshold;
+
+    /** Ниже этой — на баланс; выше обеих деньги идут на армию. */
+    public static int aiBalanceThreshold;
+
+
+    /**
+     * Переопределение числа по имени — для подбора баланса прогонами.
+     * Явный перебор, а не рефлексия: её в проекте нет, и веб её не
+     * поддерживает.
+     */
+    public static boolean setByName(String name, float value) {
+        if (name.equals("aiAppeasementThreshold")) {
+            aiAppeasementThreshold = (int) value;
+            return true;
+        }
+
+        if (name.equals("aiBalanceThreshold")) {
+            aiBalanceThreshold = (int) value;
+            return true;
+        }
+
+        if (name.equals("loyaltyAcquired")) {
+            loyaltyAcquired = (int) value;
+            return true;
+        }
+
+        if (name.equals("loyaltyDotationFactor")) {
+            loyaltyDotationFactor = value;
+            return true;
+        }
+
+        if (name.equals("policyAppeasementShare")) {
+            policyDotationShares[POLICY_APPEASEMENT] = value;
+            return true;
+        }
+
+        if (name.equals("policyBalanceShare")) {
+            policyDotationShares[POLICY_BALANCE] = value;
+            return true;
+        }
+
+        return false;
+    }
+
 
     public static void defaultValues() {
         provinceSizeToSplit = 15;
@@ -258,6 +306,8 @@ public class StatehoodTuning {
         casusBelliTurns = 20;
 
         aiReserveFactor = 0.4f;
+        aiAppeasementThreshold = 40;
+        aiBalanceThreshold = 70;
     }
 
 

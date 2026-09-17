@@ -267,6 +267,8 @@ public class LevelSnapshot {
         // в том числе когда владелец гекса не менялся. Внутри проверки на
         // смену владельца откат терял бы настроение регионов.
         currHex.loyalty = fieldCopy[i][j].loyalty;
+        currHex.regionPriority = fieldCopy[i][j].regionPriority;
+        currHex.provincePolicy = fieldCopy[i][j].provincePolicy;
 
         if (!currHex.sameFraction(fieldCopy[i][j])) {
             // Восстанавливаются оба поля: владелец и цвет. Без ownerId

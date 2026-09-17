@@ -13,6 +13,7 @@ import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyManager;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyTuning;
 import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomaticEntity;
+import yio.tro.antiyoy.gameplay.statehood.ProvinceBudget;
 import yio.tro.antiyoy.gameplay.statehood.Region;
 import yio.tro.antiyoy.gameplay.statehood.StatehoodTuning;
 import yio.tro.antiyoy.gameplay.loading.LoadingManager;
@@ -304,10 +305,58 @@ public class SelfTest {
             check("лояльность назначена всем регионам", allRegionsHaveLoyalty());
 
             check("доход падает вместе с лояльностью", isIncomeTiedToLoyalty());
+            check("дотации поднимают лояльность и стоят денег", doDotationsWork());
+            check("приоритет переключается по кругу", doesPrioritySwitch());
         } finally {
             GameRules.modRegions[GameRules.MODE_GENERIC] = saved;
             gameController.regionManager.recreateRegions();
         }
+    }
+
+
+    /**
+     * Дотации обязаны и поднимать лояльность, и списываться с казны.
+     * Без списания они были бы бесплатным добром и ничего не меняли бы в
+     * экономике — а весь смысл части III в том, что земля требует денег.
+     */
+    private boolean doDotationsWork() {
+        Region region = gameController.regionManager.regions.get(0);
+        Province province = region.province;
+        if (province == null) return false;
+
+        ProvinceBudget.setPolicy(province, StatehoodTuning.POLICY_APPEASEMENT);
+
+        province.money = 5000;
+        region.setLoyalty(30);
+
+        int moneyBefore = province.money;
+        int loyaltyBefore = region.getLoyalty();
+
+        int spent = gameController.provinceBudget.payDotations(province);
+
+        if (spent <= 0) return false;
+        if (province.money >= moneyBefore) return false;
+
+        return region.getLoyalty() > loyaltyBefore;
+    }
+
+
+    private boolean doesPrioritySwitch() {
+        Region region = gameController.regionManager.regions.get(0);
+
+        int start = region.getPriority();
+        int seen = 0;
+
+        for (int i = 0; i < StatehoodTuning.PRIORITIES_QUANTITY; i++) {
+            region.switchPriority();
+            seen++;
+
+            if (region.getPriority() == start) break;
+        }
+
+        // Круг обязан замкнуться ровно за столько шагов, сколько уровней.
+        return seen == StatehoodTuning.PRIORITIES_QUANTITY
+                && region.getPriority() == start;
     }
 
 

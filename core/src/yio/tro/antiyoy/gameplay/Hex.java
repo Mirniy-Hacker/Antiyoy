@@ -46,6 +46,16 @@ public class Hex implements ReusableYio, EncodeableYio{
      * пишется — в отличие от лояльности.
      */
     public int regionIndex;
+
+    /**
+     * Приоритет региона в бюджете провинции и политика самой провинции.
+     *
+     * Лежат на гексе по той же причине, что и лояльность: объекты Region и
+     * Province пересоздаются при загрузке и отмене хода. Все гексы одного
+     * региона несут один приоритет, все гексы провинции — одну политику.
+     */
+    public int regionPriority;
+    public int provincePolicy;
     long animStartTime;
     boolean blockToTreeFromExpanding, canContainObjects;
     public FactorYio animFactor, selectionFactor;
@@ -222,6 +232,8 @@ public class Hex implements ReusableYio, EncodeableYio{
         record.ownerId = ownerId;
         record.loyalty = loyalty;
         record.regionIndex = regionIndex;
+        record.regionPriority = regionPriority;
+        record.provincePolicy = provincePolicy;
         record.objectInside = objectInside;
         record.selected = selected;
         if (unit != null) {
