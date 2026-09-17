@@ -2,6 +2,7 @@ package yio.tro.antiyoy;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import yio.tro.antiyoy.gameplay.rules.GameRules;
 
 public class SettingsManager {
 
@@ -49,6 +50,7 @@ public class SettingsManager {
         loadMainSettings();
         loadMoreSettings();
         loadCityNamesOptions();
+        loadModFlags();
     }
 
 
@@ -130,6 +132,41 @@ public class SettingsManager {
         Preferences prefs = getPrefs();
         prefs.putInteger("city_names", convertToInteger(cityNamesEnabled));
         prefs.putBoolean("use_city_names_list", useCityNamesList);
+        prefs.flush();
+    }
+
+
+    /**
+     * Механики мода живут в GameRules и по умолчанию выключены.
+     * Без загрузки при старте игрок включал бы их заново каждый раз,
+     * а сохранённая партия всё равно принесёт свои флаги сама.
+     */
+    private void loadModFlags() {
+        if (yio.tro.antiyoy.gameplay.sim.SimConfig.getInstance().modFlagsOverridden) return;
+
+        Preferences prefs = getPrefs();
+        boolean allFlags[][] = GameRules.getAllModFlags();
+
+        for (int i = 0; i < allFlags.length; i++) {
+            String key = GameRules.MOD_FLAG_KEYS[i];
+
+            allFlags[i][GameRules.MODE_GENERIC] = prefs.getBoolean(key + "_generic", false);
+            allFlags[i][GameRules.MODE_SLAY] = prefs.getBoolean(key + "_slay", false);
+        }
+    }
+
+
+    public void saveModFlags() {
+        Preferences prefs = getPrefs();
+        boolean allFlags[][] = GameRules.getAllModFlags();
+
+        for (int i = 0; i < allFlags.length; i++) {
+            String key = GameRules.MOD_FLAG_KEYS[i];
+
+            prefs.putBoolean(key + "_generic", allFlags[i][GameRules.MODE_GENERIC]);
+            prefs.putBoolean(key + "_slay", allFlags[i][GameRules.MODE_SLAY]);
+        }
+
         prefs.flush();
     }
 

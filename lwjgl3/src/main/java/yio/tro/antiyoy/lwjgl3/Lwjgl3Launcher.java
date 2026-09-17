@@ -109,6 +109,16 @@ public class Lwjgl3Launcher {
             } else if (key.equals("--out")) {
                 config.outputPath = value;
                 i++;
+            } else if (key.equals("--screenshot")) {
+                config.screenshotPath = value;
+                if (config.playtestTurns == 0) config.playtestTurns = 12;
+                i++;
+            } else if (key.equals("--scene")) {
+                config.startScene = value;
+                i++;
+            } else if (key.equals("--playtest-turns")) {
+                config.playtestTurns = Integer.parseInt(value);
+                i++;
             } else if (key.equals("--trace")) {
                 config.tracePath = value;
                 i++;
@@ -137,6 +147,7 @@ public class Lwjgl3Launcher {
      */
     private static void applyModFlags(String value) {
         GameRules.defaultModFlags();
+        SimConfig.getInstance().modFlagsOverridden = true;
 
         if (value.equalsIgnoreCase("all")) {
             GameRules.setAllModFlags(true);
@@ -234,6 +245,11 @@ public class Lwjgl3Launcher {
         System.out.println("  --trace PATH       по-ходовой след состояния; diff двух следов");
         System.out.println("  --mod LIST         включить механики мода: all или ключи через запятую");
         System.out.println("                     показывает ход, на котором прогоны разошлись");
+        System.out.println();
+        System.out.println("Снимок экрана:");
+        System.out.println("  --screenshot PATH  разыграть партию и сохранить кадр в PNG");
+        System.out.println("  --playtest-turns N сколько ходов разыграть до снимка");
+        System.out.println("  --scene NAME       открыть экран меню: mod|settings");
         System.out.println();
         System.out.println("Самопроверка:");
         System.out.println("  --selftest         сериализация и флаги; ненулевой код возврата при провале");

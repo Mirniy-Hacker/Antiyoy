@@ -314,6 +314,20 @@
         <string key="skin" value="Skin"/>
         <string key="anim_style" value="Sensitivity"/>
         <string key="more" value="More"/>
+
+        <!-- Mod -->
+        <string key="mod_options" value="Mod"/>
+        <string key="mod_switch_all" value="All at once"/>
+        <string key="mod_treasury_cap" value="Treasury cap"/>
+        <string key="mod_unit_price_growth" value="Rising unit price"/>
+        <string key="mod_regions" value="Regions"/>
+        <string key="mod_secession" value="Secession"/>
+        <string key="mod_opinion" value="Opinion"/>
+        <string key="mod_land_deals" value="Land deals"/>
+        <string key="mod_personalities" value="Personalities"/>
+        <string key="mod_diplomatic_actions" value="Diplomatic actions"/>
+        <string key="mod_ai_coordination" value="AI coordination"/>
+        <string key="mod_ui_improvements" value="Interface additions"/>
         <string key="camera_offset" value="Camera offset"/>
         <string key="slay_rules" value="Slay rules"/>
         <string key="language" value="Language"/>
@@ -754,6 +768,20 @@
         <string key="skin_shroomarts" value="ShroomArts"/>  <!-- Same as english -->
         <string key="anim_style" value="Чувствительность"/>
         <string key="more" value="Еще"/>
+
+        <!-- Mod -->
+        <string key="mod_options" value="Мод"/>
+        <string key="mod_switch_all" value="Все сразу"/>
+        <string key="mod_treasury_cap" value="Предел казны"/>
+        <string key="mod_unit_price_growth" value="Рост цены воинов"/>
+        <string key="mod_regions" value="Регионы"/>
+        <string key="mod_secession" value="Отделение"/>
+        <string key="mod_opinion" value="Мнение"/>
+        <string key="mod_land_deals" value="Сделки по земле"/>
+        <string key="mod_personalities" value="Характеры"/>
+        <string key="mod_diplomatic_actions" value="Действия дипломатии"/>
+        <string key="mod_ai_coordination" value="Согласованность ИИ"/>
+        <string key="mod_ui_improvements" value="Добавления в интерфейс"/>
         <string key="camera_offset" value="Отступ камеры"/>
         <string key="slay_rules" value="Правила Slay"/>
         <string key="language" value="Язык"/>

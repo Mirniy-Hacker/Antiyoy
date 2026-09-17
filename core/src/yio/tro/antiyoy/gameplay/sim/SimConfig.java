@@ -33,6 +33,32 @@ public class SimConfig {
      */
     public String tracePath;
 
+    /**
+     * Путь для снимка игрового экрана. Пустой — снимок не делается.
+     * Нужен, чтобы проверять картинку прогоном, а не глазами на телефоне.
+     */
+    public String screenshotPath;
+
+
+    /**
+     * Сколько ходов разыграть автозапуском партии. 0 — автозапуска нет.
+     * В вебе задаётся параметром адреса ?turns=N.
+     */
+    public int playtestTurns;
+
+    /**
+     * Экран меню, который открыть сразу после запуска. Пустой — обычный
+     * старт. Нужен, чтобы проверять новые экраны снимком, а не пальцем.
+     */
+    public String startScene;
+
+    /**
+     * Флаги мода заданы из командной строки. Настройки их тогда не трогают:
+     * прогон обязан идти ровно с тем набором механик, который запросили,
+     * а не с тем, что игрок оставил в меню.
+     */
+    public boolean modFlagsOverridden;
+
 
     private SimConfig() {
         defaultValues();
@@ -62,6 +88,10 @@ public class SimConfig {
         maxTurns = 400;
         outputPath = "sim-results/sim.csv";
         tracePath = null;
+        screenshotPath = null;
+        playtestTurns = 0;
+        startScene = null;
+        modFlagsOverridden = false;
     }
 
 
@@ -71,6 +101,12 @@ public class SimConfig {
      */
     public long getMatchSeed(int matchIndex) {
         return seed * 1000003L + matchIndex;
+    }
+
+
+    /** Нужен ли автозапуск: партия, экран меню или и то и другое. */
+    public boolean isPlaytestRequested() {
+        return playtestTurns > 0 || startScene != null;
     }
 
 

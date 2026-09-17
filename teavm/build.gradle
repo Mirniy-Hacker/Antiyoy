@@ -5,6 +5,8 @@ plugins {
   id 'com.github.xpenatan.gdx-teavm' version "$gdxTeaVMVersion"
 }
 
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
 // TeaVM требует минимум 17 и не ниже JDK, которым собирается проект.
 // Это касается только этого модуля: core остаётся на 8.
 java.targetCompatibility = '17'

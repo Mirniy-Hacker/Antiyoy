@@ -68,6 +68,7 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     double bubbleGravity;
     boolean loadedResources;
     private boolean simulationPerformed;
+    private yio.tro.antiyoy.gameplay.sim.PlaytestRunner playtestRunner;
     private static int simulationExitCode;
     boolean ignoreDrag;
     public boolean simpleTransitionAnimation, useMenuMasks;
@@ -547,6 +548,11 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
             return;
         }
 
+        // Автозапуск партии: она разыгрывается до первого кадра.
+        if (SimConfig.getInstance().isPlaytestRequested() && !preparePlaytest()) {
+            return;
+        }
+
         // Режим автоматчей: партии гоняются вместо обычного игрового цикла.
         if (SimConfig.getInstance().enabled) {
             checkToRunSimulation();
@@ -576,8 +582,28 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         }
 
         stage.draw();
+
+        if (playtestRunner != null) {
+            playtestRunner.afterFrame();
+        }
     }
 
+
+
+    /**
+     * Автозапуск партии: пока она не разыграна, кадры не рисуются.
+     * Возвращает true, когда можно рисовать обычным путём.
+     */
+    private boolean preparePlaytest() {
+        if (playtestRunner == null) {
+            playtestRunner = new yio.tro.antiyoy.gameplay.sim.PlaytestRunner(this);
+        }
+
+        if (playtestRunner.isMatchReady()) return true;
+
+        playtestRunner.prepareMatch();
+        return false;
+    }
 
 
     private void checkToRunSimulation() {

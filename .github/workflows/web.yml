@@ -43,6 +43,12 @@ jobs:
           chmod +x web/patch-index.sh
           ./web/patch-index.sh teavm/build/dist/js/release/webapp/index.html
 
+      - name: Check that the build actually starts
+        run: |
+          node web/serve.js teavm/build/dist/js/release/webapp 8099 &
+          sleep 2
+          node web/check-startup.js "$(which google-chrome || which chromium-browser)" http://127.0.0.1:8099/
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: teavm/build/dist/js/release/webapp

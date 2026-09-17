@@ -2,8 +2,10 @@ package yio.tro.antiyoy.teavm;
 
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplication;
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
+import org.teavm.jso.JSBody;
 import yio.tro.antiyoy.PlatformType;
 import yio.tro.antiyoy.YioGdxGame;
+import yio.tro.antiyoy.gameplay.sim.SimConfig;
 
 /**
  * Веб-точка входа. Собирается в JS или WASM и открывается в Safari на
@@ -21,6 +23,8 @@ public class TeaVMLauncher {
         // iOS нет, а застывшая заставка не отличается от падения.
         YioGdxGame.startupReporter = new WebStartupReporter();
 
+        applyPlaytestParameter();
+
         WebApplicationConfiguration configuration = new WebApplicationConfiguration();
 
         configuration.canvasID = "canvas";
@@ -31,4 +35,36 @@ public class TeaVMLauncher {
 
         new WebApplication(new YioGdxGame(), configuration);
     }
+
+
+    /**
+     * ?turns=N разыгрывает партию сразу после запуска, ?scene=имя
+     * открывает экран меню.
+     *
+     * Иначе до игрового поля надо дойти по меню, а снаружи — из браузерного
+     * отладчика — это означает угадывание координат кнопок.
+     */
+    private static void applyPlaytestParameter() {
+        String scene = readParameter("scene");
+        if (scene != null && scene.length() > 0) {
+            SimConfig.getInstance().startScene = scene;
+        }
+
+        int turns = readIntParameter("turns");
+        if (turns <= 0) return;
+
+        SimConfig.getInstance().playtestTurns = turns;
+    }
+
+
+    @JSBody(params = "name", script =
+            "return new URLSearchParams(window.location.search).get(name);")
+    private static native String readParameter(String name);
+
+
+    @JSBody(params = "name", script =
+            "var value = new URLSearchParams(window.location.search).get(name);" +
+            "var number = parseInt(value, 10);" +
+            "return isNaN(number) ? 0 : number;")
+    private static native int readIntParameter(String name);
 }

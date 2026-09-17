@@ -49,6 +49,7 @@ public class SelfTest {
         checkTuningInitialized();
         checkModFlagDefaults();
         checkModFlagModeSeparation();
+        checkCommandLineFlagsSurviveSettings();
 
         prepareMatch();
 
@@ -67,6 +68,36 @@ public class SelfTest {
         DebugFlags.testMode = false;
 
         return report();
+    }
+
+
+    /**
+     * Загрузка настроек не имеет права трогать флаги, заданные
+     * из командной строки.
+     *
+     * Экран настроек мода принёс их сохранение в настройки, и
+     * загрузка при старте молча обнуляла --mod: прогон шёл без
+     * механик, а в отчёте об этом ничего не было.
+     */
+    private void checkCommandLineFlagsSurviveSettings() {
+        SimConfig config = SimConfig.getInstance();
+        boolean savedOverride = config.modFlagsOverridden;
+
+        GameRules.setAllModFlags(true);
+        config.modFlagsOverridden = true;
+
+        yio.tro.antiyoy.SettingsManager.getInstance().loadAllSettings();
+
+        boolean survived = true;
+        for (boolean flags[] : GameRules.getAllModFlags()) {
+            if (!flags[GameRules.MODE_GENERIC]) survived = false;
+            if (!flags[GameRules.MODE_SLAY]) survived = false;
+        }
+
+        config.modFlagsOverridden = savedOverride;
+        GameRules.defaultModFlags();
+
+        check("настройки не затирают флаги из командной строки", survived);
     }
 
 

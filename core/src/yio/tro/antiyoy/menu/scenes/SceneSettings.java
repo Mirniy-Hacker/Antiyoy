@@ -62,11 +62,34 @@ public class SceneSettings extends AbstractScene{
         createCheckButtons();
         createMoreSettingsButton();
         createLanguageButton();
+        createModButton();
 
         loadValues();
         initialized = true;
 
         menuControllerYio.endMenuCreation();
+    }
+
+
+    /**
+     * Вход в механики мода. Стоит в настройках, а не в параметрах
+     * матча: флаги общие для всех партий и живут между запусками.
+     */
+    private void createModButton() {
+        ButtonYio modButton = buttonFactory.getButton(generateRectangle(0.1, 0.08, 0.8, 0.06), 198, getString("mod_options"));
+        modButton.setReaction(getModReaction());
+        modButton.setAnimation(Animation.down);
+    }
+
+
+    private Reaction getModReaction() {
+        return new Reaction() {
+            @Override
+            public void perform(ButtonYio buttonYio) {
+                onDestroy();
+                Scenes.sceneModOptions.create();
+            }
+        };
     }
 
 

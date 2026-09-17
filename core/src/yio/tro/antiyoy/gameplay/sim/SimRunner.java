@@ -83,8 +83,8 @@ public class SimRunner {
         currentMatchIndex = matchIndex;
 
         gameController.secessionManager.defaultValues();
-        seedRandomSources(matchSeed);
-        launchMatch(matchSeed);
+        seedRandomSources(gameController, matchSeed);
+        launchMatch(config, matchSeed);
         prepareAi();
         resetSampling();
 
@@ -108,14 +108,14 @@ public class SimRunner {
      * передаётся ещё и через параметры загрузки. YioGdxGame.random
      * статический, и именно им пользуются ИИ и дипломатия.
      */
-    private void seedRandomSources(long matchSeed) {
+    static void seedRandomSources(GameController gameController, long matchSeed) {
         gameController.random.setSeed(matchSeed);
         gameController.predictableRandom.setSeed(matchSeed);
         YioGdxGame.random.setSeed(matchSeed);
     }
 
 
-    private void launchMatch(long matchSeed) {
+    static void launchMatch(SimConfig config, long matchSeed) {
         LoadingParameters parameters = LoadingParameters.getInstance();
 
         parameters.loadingType = LoadingType.skirmish;

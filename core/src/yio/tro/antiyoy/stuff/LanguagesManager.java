@@ -15,12 +15,22 @@ public class LanguagesManager {
     private static final String DEFAULT_LANGUAGE = "en_UK";
 
     private HashMap<String, String> _language = null;
+
+    /**
+     * Английские строки как запасные.
+     *
+     * Строки мода заведены только на английском и русском, а языков в
+     * файле двадцать пять. Без запасного словаря игрок с любым другим
+     * языком увидел бы вместо подписей сырые ключи.
+     */
+    private HashMap<String, String> _fallback = null;
     private String _languageName = null;
 
 
     private LanguagesManager() {
         // Create language map
         _language = new HashMap<>();
+        _fallback = new HashMap<>();
 
         // Try to load system language
         // If it fails, fallback to default language
@@ -71,7 +81,13 @@ public class LanguagesManager {
             }
         }
 
-        // Key not found, return the key itself
+        // Строка может быть не переведена: берём английскую.
+        String fallback = _fallback.get(key);
+        if (fallback != null) {
+            return fallback;
+        }
+
+        // Нет и там — остаётся показать сам ключ.
         return key;
     }
 
@@ -144,6 +160,8 @@ public class LanguagesManager {
                 _language.clear();
                 loadStringsInto(language);
 
+                loadFallback(root);
+
                 return true;
             }
         } catch (Exception e) {
@@ -155,7 +173,30 @@ public class LanguagesManager {
     }
 
 
+    /**
+     * Английский словарь заполняется тем же разбором файла: читать
+     * 700 килобайт XML второй раз незачем.
+     */
+    private void loadFallback(XmlReader.Element root) {
+        _fallback.clear();
+
+        for (int i = 0; i < root.getChildCount(); i++) {
+            XmlReader.Element language = root.getChild(i);
+            if (!language.getName().equals("language")) continue;
+            if (!DEFAULT_LANGUAGE.equals(language.getAttribute("name", null))) continue;
+
+            loadStringsInto(language, _fallback);
+            return;
+        }
+    }
+
+
     private void loadStringsInto(XmlReader.Element language) {
+        loadStringsInto(language, _language);
+    }
+
+
+    private void loadStringsInto(XmlReader.Element language, HashMap<String, String> target) {
         for (int j = 0; j < language.getChildCount(); j++) {
             XmlReader.Element string = language.getChild(j);
             if (!string.getName().equals("string")) continue;

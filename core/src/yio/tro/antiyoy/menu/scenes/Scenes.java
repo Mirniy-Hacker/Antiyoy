@@ -11,6 +11,7 @@ public class Scenes {
     public static SceneMainMenu sceneMainMenu;
     public static SceneSettings sceneSettings;
     public static SceneMoreSettings sceneMoreSettings;
+    public static SceneModOptions sceneModOptions;
     public static SceneArticle sceneArticle;
     public static SceneMoreSkirmishOptions sceneMoreSkirmishOptions;
     public static SceneSkirmishMenu sceneSkirmishMenu;
@@ -114,6 +115,7 @@ public class Scenes {
         sceneMainMenu = new SceneMainMenu(menuController);
         sceneSettings = new SceneSettings(menuController);
         sceneMoreSettings = new SceneMoreSettings(menuController);
+        sceneModOptions = new SceneModOptions(menuController);
         sceneArticle = new SceneArticle(menuController);
         sceneMoreSkirmishOptions = new SceneMoreSkirmishOptions(menuController);
         sceneSkirmishMenu = new SceneSkirmishMenu(menuController);
