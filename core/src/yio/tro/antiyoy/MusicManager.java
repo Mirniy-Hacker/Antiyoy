@@ -1,6 +1,7 @@
 package yio.tro.antiyoy;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.audio.Music;
 
 public class MusicManager {
@@ -25,6 +26,10 @@ public class MusicManager {
 
 
     public void onMusicStatusChanged() {
+        // Музыки может не быть вовсе: в вебе формат может не поддерживаться,
+        // а файла нужного формата может и не оказаться.
+        if (music == null) return;
+
         if (SettingsManager.musicEnabled) {
             if (music.isPlaying()) return;
             play();
@@ -48,12 +53,41 @@ public class MusicManager {
     }
 
 
+    /**
+     * Музыка грузится терпимо к отсутствию файла и формата.
+     *
+     * Ветка iOS просит mp3, а в ассетах оригинала нет ни одного mp3 — только
+     * ogg. Раньше это роняло generalInitialization целиком, и игра
+     * застревала на заставке.
+     */
     public void load() {
-        if (YioGdxGame.platformType == PlatformType.ios) {
-            music = Gdx.audio.newMusic(Gdx.files.internal("sound/music.mp3"));
+        music = null;
+
+        FileHandle fileHandle = findMusicFile();
+        if (fileHandle == null) {
+            System.out.println("Музыка не найдена ни в одном формате");
             return;
         }
-        music = Gdx.audio.newMusic(Gdx.files.internal("sound/music.ogg"));
+
+        try {
+            music = Gdx.audio.newMusic(fileHandle);
+        } catch (Exception exception) {
+            System.out.println("Не удалось загрузить музыку: " + fileHandle.path());
+        }
+    }
+
+
+    private FileHandle findMusicFile() {
+        String names[] = YioGdxGame.platformType == PlatformType.ios
+                ? new String[]{"sound/music.mp3", "sound/music.ogg"}
+                : new String[]{"sound/music.ogg", "sound/music.mp3"};
+
+        for (String name : names) {
+            FileHandle fileHandle = Gdx.files.internal(name);
+            if (fileHandle.exists()) return fileHandle;
+        }
+
+        return null;
     }
 
 }
