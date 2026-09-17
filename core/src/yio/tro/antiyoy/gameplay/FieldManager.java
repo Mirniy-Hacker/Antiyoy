@@ -197,7 +197,7 @@ public class FieldManager implements EncodeableYio{
 
 
     public int[] getIncomeArray() {
-        int[] array = new int[GameRules.fractionsQuantity];
+        int[] array = new int[GameRules.ownerLimit];
 
         for (int i = 0; i < array.length; i++) {
             array[i] = 0;
@@ -563,7 +563,7 @@ public class FieldManager implements EncodeableYio{
 
 
     public void createPlayerHexCount() {
-        playerHexCount = new int[GameRules.fractionsQuantity];
+        playerHexCount = new int[GameRules.ownerLimit];
     }
 
 
@@ -596,7 +596,7 @@ public class FieldManager implements EncodeableYio{
 
 
     public int getPredictionForWinner() {
-        int numbers[] = new int[GameRules.fractionsQuantity];
+        int numbers[] = new int[GameRules.ownerLimit];
         for (Hex activeHex : activeHexes) {
             if (activeHex.isNeutral()) continue;
             numbers[activeHex.fraction]++;
@@ -616,7 +616,7 @@ public class FieldManager implements EncodeableYio{
 
 
     public boolean areConditionsGoodForPlayer() {
-        int numbers[] = new int[GameRules.fractionsQuantity];
+        int numbers[] = new int[GameRules.ownerLimit];
         for (Hex activeHex : activeHexes) {
             if (activeHex.isNeutral()) continue;
             numbers[activeHex.fraction]++;

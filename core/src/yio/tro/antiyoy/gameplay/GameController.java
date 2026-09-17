@@ -24,6 +24,7 @@ import yio.tro.antiyoy.gameplay.rules.RulesetGeneric;
 import yio.tro.antiyoy.gameplay.rules.RulesetSlay;
 import yio.tro.antiyoy.gameplay.statehood.ProvinceBudget;
 import yio.tro.antiyoy.gameplay.statehood.RegionManager;
+import yio.tro.antiyoy.gameplay.statehood.SecessionManager;
 import yio.tro.antiyoy.gameplay.statehood.StatehoodAi;
 import yio.tro.antiyoy.gameplay.touch_mode.TouchMode;
 import yio.tro.antiyoy.menu.ButtonYio;
@@ -89,6 +90,7 @@ public class GameController {
     public RegionManager regionManager;
     public ProvinceBudget provinceBudget;
     public StatehoodAi statehoodAi;
+    public SecessionManager secessionManager;
     public EncodeManager encodeManager;
     public DecodeManager decodeManager;
     public ImportManager importManager;
@@ -120,6 +122,7 @@ public class GameController {
         regionManager = new RegionManager(this);
         provinceBudget = new ProvinceBudget(this);
         statehoodAi = new StatehoodAi(this);
+        secessionManager = new SecessionManager(this);
         mapGeneratorSlay = new MapGenerator(this);
         convertedTouchPoint = new PointYio();
         mapGeneratorGeneric = new MapGeneratorGeneric(this);
@@ -527,6 +530,10 @@ public class GameController {
         payDotationsForCurrentFraction();
 
         regionManager.updateLoyaltyForFraction(turn);
+
+        // Отделение проверяется после пересчёта лояльности: счётчик волнений
+        // обновляется именно там.
+        secessionManager.checkForSecession(turn);
         collectTributesAndPayTaxes();
         checkForStarvation();
 

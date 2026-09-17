@@ -30,6 +30,11 @@ public class DiplomaticEntity implements ReusableYio {
     public int entityId;
 
     public int fraction;
+
+    /**
+     * Характер. Спека, часть V: скрыт от игрока, узнаётся по поведению.
+     */
+    public final Personality personality = new Personality();
     public String capitalName;
     /**
      * Отношения к другим сущностям.

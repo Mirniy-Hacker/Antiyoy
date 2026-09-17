@@ -110,6 +110,19 @@ public class StatehoodTuning {
     public static int secessionTurnsMedium;
     public static int secessionTurnsHard;
 
+    /** Регион меньше этого не отделяется: осколок в два гекса не государство. */
+    public static int secessionMinRegionSize;
+
+    /** Сколько отделившихся государств может существовать одновременно. */
+    public static int maxSecededStatesAlive;
+
+    /** Между отделениями у одной фракции обязан пройти этот срок. */
+    public static int secessionCooldownTurns;
+
+    /** Отделившееся государство не дробится дальше столько ходов. */
+    public static int secessionGraceTurns;
+
+
     /** Защитники нового государства: уровень defenderBase + hexCount / defenderHexStep. */
     public static int defenderBaseLevel;
     public static int defenderHexStep;
@@ -203,6 +216,43 @@ public class StatehoodTuning {
      * поддерживает.
      */
     public static boolean setByName(String name, float value) {
+        if (name.equals("maxSecededStatesAlive")) {
+            maxSecededStatesAlive = (int) value;
+            return true;
+        }
+
+        if (name.equals("secessionCooldownTurns")) {
+            secessionCooldownTurns = (int) value;
+            return true;
+        }
+
+        if (name.equals("secessionGraceTurns")) {
+            secessionGraceTurns = (int) value;
+            return true;
+        }
+
+        if (name.equals("secessionMinRegionSize")) {
+            secessionMinRegionSize = (int) value;
+            return true;
+        }
+
+        if (name.equals("unrestLoyaltyThreshold")) {
+            unrestLoyaltyThreshold = (int) value;
+            return true;
+        }
+
+        if (name.equals("unrestTriggerTurns")) {
+            unrestTriggerTurns = (int) value;
+            return true;
+        }
+
+        if (name.equals("secessionTurnsHard")) {
+            secessionTurnsHard = (int) value;
+            secessionTurnsMedium = (int) value;
+            secessionTurnsEasy = (int) value;
+            return true;
+        }
+
         if (name.equals("aiAppeasementThreshold")) {
             aiAppeasementThreshold = (int) value;
             return true;
@@ -277,6 +327,10 @@ public class StatehoodTuning {
         secessionTurnsMedium = 6;
         secessionTurnsHard = 4;
 
+        secessionMinRegionSize = 8;
+        maxSecededStatesAlive = 3;
+        secessionCooldownTurns = 25;
+        secessionGraceTurns = 40;
         defenderBaseLevel = 1;
         defenderHexStep = 8;
 

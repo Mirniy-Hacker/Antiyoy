@@ -103,7 +103,7 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         frameSkipCount = 50; // >= 2
         screenRatio = (float) w / (float) h;
         frameBuffer = FrameBufferYio.getInstance(Pixmap.Format.RGB565, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-        balanceIndicator = new int[GameRules.fractionsQuantity];
+        balanceIndicator = new int[GameRules.ownerLimit];
         backButtonIds = new ArrayList<Integer>();
         useMenuMasks = true;
         stage = new Stage();

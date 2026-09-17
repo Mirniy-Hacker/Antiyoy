@@ -1417,6 +1417,35 @@ public class DiplomacyManager {
      * Поиск по устойчивой идентичности. Сериализация обязана пользоваться
      * именно им: цвет у сущности может смениться, идентификатор — нет.
      */
+    /**
+     * Сущность отделившегося государства. Спека, часть III.
+     *
+     * Создаётся по ходу партии, а не в updateEntities: тот пересоздаёт всех
+     * с нуля при создании уровня и снёс бы её. Отношения заводятся в обе
+     * стороны вручную — initRelations рассчитан на разовую инициализацию.
+     */
+    public DiplomaticEntity createSecededEntity(int entityId) {
+        DiplomaticEntity next = poolEntities.getNext();
+
+        next.setFraction(entityId);
+        next.setEntityId(entityId);
+        next.setHuman(false);
+        next.alive = true;
+
+        for (DiplomaticEntity other : entities) {
+            next.setRelation(other, DiplomaticRelation.NEUTRAL);
+            other.setRelation(next, DiplomaticRelation.NEUTRAL);
+            next.debts.add(new Debt(next, other, 0));
+            other.debts.add(new Debt(other, next, 0));
+        }
+
+        entities.add(next);
+        next.updateCapitalName();
+
+        return next;
+    }
+
+
     public DiplomaticEntity getEntityById(int entityId) {
         for (DiplomaticEntity entity : entities) {
             if (entity.entityId != entityId) continue;

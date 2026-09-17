@@ -44,7 +44,26 @@ public class GameRules {
     public static boolean diplomaticRelationsLocked;
 
 
+    /**
+     * Верхняя граница идентификаторов владельцев: размер массивов, которые
+     * индексируются ownerId.
+     *
+     * Растёт при отделении государств. Отдельно от fractionsQuantity
+     * сознательно: та задаёт число игроков в начале партии и в её смысле
+     * не меняется, а владельцев по ходу партии становится больше.
+     */
+    public static int ownerLimit = MAX_FRACTIONS_QUANTITY;
+
+
+    public static void ensureOwnerLimit(int ownerId) {
+        if (ownerId < ownerLimit) return;
+
+        ownerLimit = ownerId + 1;
+    }
+
+
     public static void defaultValues() {
+        ownerLimit = MAX_FRACTIONS_QUANTITY;
         tutorialMode = false;
         campaignMode = false;
         inEditorMode = false;

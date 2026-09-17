@@ -82,6 +82,7 @@ public class SimRunner {
 
         currentMatchIndex = matchIndex;
 
+        gameController.secessionManager.defaultValues();
         seedRandomSources(matchSeed);
         launchMatch(matchSeed);
         prepareAi();
@@ -266,6 +267,7 @@ public class SimRunner {
         result.friendshipsBroken = statistics.friendshipsBroken;
         result.unitsProduced = statistics.unitsProduced;
         result.unitsDied = statistics.unitsDied;
+        result.secededRegions = gameController.secessionManager.secededCount;
         result.maxMoney = maxMoney;
 
         result.fieldHash = SimStateHash.computeField(gameController);
