@@ -5,7 +5,9 @@ import yio.tro.antiyoy.gameplay.DebugFlags;
 import yio.tro.antiyoy.gameplay.ColorsManager;
 import yio.tro.antiyoy.gameplay.GameController;
 import yio.tro.antiyoy.gameplay.Hex;
+import yio.tro.antiyoy.gameplay.Obj;
 import yio.tro.antiyoy.gameplay.Province;
+import yio.tro.antiyoy.gameplay.SelectionTipType;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyInfoCondensed;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyManager;
 import yio.tro.antiyoy.gameplay.diplomacy.DiplomacyTuning;
@@ -47,6 +49,8 @@ public class SelfTest {
 
         prepareMatch();
 
+        checkStickyBuildTapCount();
+        checkAutoFarms();
         checkPaletteBeyondLimit();
         checkOwnerIdInvariant();
         checkStateHashSensitivity();
@@ -218,6 +222,130 @@ public class SelfTest {
         instance.update(getDiplomacyManager());
 
         return instance.getFull();
+    }
+
+
+    /**
+     * Критерий приёмки этапа 3: десять ферм подряд стоят одиннадцать тапов.
+     *
+     * Считаются настоящие тапы через публичный вход focusedHexActions, а не
+     * заявляется число: выбор постройки — один тап, каждая установка — ещё
+     * один. Без липкого режима постройку приходится выбирать заново каждый
+     * раз, и тапов выходит вдвое больше.
+     */
+    private void checkStickyBuildTapCount() {
+        int sticky = countTapsToBuildFarms(10, true);
+        int plain = countTapsToBuildFarms(10, false);
+
+        System.out.println("       тапов на 10 ферм: липкий режим " + sticky +
+                ", обычный " + plain);
+
+        check("десять ферм в липком режиме стоят не больше 11 тапов",
+                sticky > 0 && sticky <= 11);
+
+        check("липкий режим экономит тапы против обычного",
+                plain > sticky);
+    }
+
+
+    /**
+     * Прогоняет постройку ферм тапами и возвращает их число.
+     * Ноль означает, что сценарий не удалось собрать.
+     */
+    private int countTapsToBuildFarms(int farmsWanted, boolean sticky) {
+        prepareMatch();
+
+        boolean savedFlag = GameRules.modUiImprovements[GameRules.MODE_GENERIC];
+        GameRules.modUiImprovements[GameRules.MODE_GENERIC] = sticky;
+
+        int taps = 0;
+
+        try {
+            Province province = getBiggestOwnProvince();
+            if (province == null) return 0;
+
+            // Денег заведомо хватает: меряется число тапов, а не экономика.
+            province.money = 100000;
+
+            gameController.fieldManager.selectedProvince = province;
+
+            int built = 0;
+            for (int attempt = 0; attempt < farmsWanted * 6 && built < farmsWanted; attempt++) {
+                Hex hex = gameController.fieldManager.getBestHexForNewFarm(province);
+                if (hex == null) break;
+
+                // Выбор постройки — это тап. В липком режиме он нужен один
+                // раз, в обычном перед каждой установкой.
+                if (gameController.selectionManager.getTipType() != SelectionTipType.FARM) {
+                    gameController.selectionManager.awakeTip(SelectionTipType.FARM);
+                    taps++;
+                }
+
+                gameController.fieldManager.selectAdjacentHexes(hex);
+
+                gameController.selectionManager.setFocusedHex(hex);
+                gameController.selectionManager.focusedHexActions(hex);
+                taps++;
+
+                if (hex.objectInside == Obj.FARM) {
+                    built++;
+                }
+            }
+
+            if (built < farmsWanted) return 0;
+        } finally {
+            GameRules.modUiImprovements[GameRules.MODE_GENERIC] = savedFlag;
+        }
+
+        return taps;
+    }
+
+
+    private Province getBiggestOwnProvince() {
+        Province best = null;
+
+        for (Province province : gameController.fieldManager.provinces) {
+            if (best == null || province.hexList.size() > best.hexList.size()) {
+                best = province;
+            }
+        }
+
+        return best;
+    }
+
+
+    /**
+     * Автопостройка ферм обязана уважать заданный остаток казны: иначе она
+     * оставит игрока без денег на юнитов.
+     */
+    private void checkAutoFarms() {
+        prepareMatch();
+
+        boolean savedFlag = GameRules.modUiImprovements[GameRules.MODE_GENERIC];
+        GameRules.modUiImprovements[GameRules.MODE_GENERIC] = true;
+
+        try {
+            Province province = getBiggestOwnProvince();
+            if (province == null) {
+                check("нашлась провинция для автоферм", false);
+                return;
+            }
+
+            province.money = 1000;
+            int moneyToKeep = 300;
+
+            int built = gameController.fieldManager.autoBuildFarms(province, moneyToKeep);
+
+            check("автопостройка поставила хотя бы одну ферму", built > 0);
+            check("автопостройка не тронула заданный остаток казны",
+                    province.money >= moneyToKeep);
+
+            // Повторный вызов на том же остатке не должен ничего строить.
+            int again = gameController.fieldManager.autoBuildFarms(province, province.money);
+            check("автопостройка останавливается на пороге", again == 0);
+        } finally {
+            GameRules.modUiImprovements[GameRules.MODE_GENERIC] = savedFlag;
+        }
     }
 
 

@@ -554,8 +554,13 @@ public class SelectionManager {
     private boolean reactionBuildStuff() {
         FieldManager fieldManager = gameController.fieldManager;
 
+        // Тип запоминается до постройки: она его сбрасывает.
+        int previousTipType = tipType;
+        boolean built = false;
+
         if (canBuildOnHex(focusedHex, tipType)) {
             buildSomethingOnHex(focusedHex);
+            built = true;
             // else attack by building unit
         } else {
             if (unitBuildConditions()) {
@@ -573,7 +578,56 @@ public class SelectionManager {
         fieldManager.showBuildOverlay();
         hideMoveZone();
 
+        checkToKeepBuildMode(previousTipType, built);
+
         return true;
+    }
+
+
+    /**
+     * Липкий режим постройки. Спека, часть IX: выбрал ферму — ставишь подряд
+     * по тапам, не выбирая её заново каждый раз.
+     *
+     * Без этого десять ферм стоят тридцать с лишним тапов: выбор постройки,
+     * тап по гексу, и так десять раз. С ним — одиннадцать.
+     *
+     * Режим сам гаснет, когда постройку больше не потянуть: иначе игрок
+     * тапал бы по карте, не понимая, почему ничего не происходит.
+     */
+    private void checkToKeepBuildMode(int previousTipType, boolean built) {
+        if (!GameRules.areUiImprovementsEnabled()) return;
+        if (!built) return;
+        if (previousTipType < 0) return;
+
+        Province province = gameController.fieldManager.selectedProvince;
+        if (province == null) return;
+        if (!canAffordTipType(province, previousTipType)) return;
+
+        awakeTip(previousTipType);
+    }
+
+
+    /**
+     * Хватает ли казны провинции на ещё одну такую постройку.
+     */
+    private boolean canAffordTipType(Province province, int type) {
+        switch (type) {
+            default:
+                return false;
+            case SelectionTipType.TOWER:
+                return province.money >= GameRules.PRICE_TOWER;
+            case SelectionTipType.STRONG_TOWER:
+                return province.money >= GameRules.PRICE_STRONG_TOWER;
+            case SelectionTipType.TREE:
+                return province.money >= GameRules.PRICE_TREE;
+            case SelectionTipType.FARM:
+                return province.money >= province.getCurrentFarmPrice();
+            case SelectionTipType.UNIT_1:
+            case SelectionTipType.UNIT_2:
+            case SelectionTipType.UNIT_3:
+            case SelectionTipType.UNIT_4:
+                return province.money >= province.getCurrentUnitPrice(type);
+        }
     }
 
 
@@ -609,7 +663,12 @@ public class SelectionManager {
             case SelectionTipType.UNIT_2:
             case SelectionTipType.UNIT_3:
             case SelectionTipType.UNIT_4:
-                return (GameRules.PRICE_UNIT * tipType);
+                // Цена спрашивается у провинции: внутри хода она растёт.
+                // Без этого на кнопке был бы ценник, по которому уже не купить.
+                Province province = gameController.fieldManager.selectedProvince;
+                if (province == null) return GameRules.PRICE_UNIT * tipType;
+
+                return province.getCurrentUnitPrice(tipType);
             case SelectionTipType.FARM:
                 Province selectedProvince = gameController.fieldManager.selectedProvince;
                 if (selectedProvince == null) return 9999;
