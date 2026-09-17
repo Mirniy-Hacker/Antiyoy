@@ -18,6 +18,17 @@ public class DiplomaticEntity implements ReusableYio {
 
 
     DiplomacyManager diplomacyManager;
+
+    /**
+     * Устойчивая идентичность сущности. Спека, часть I: отношения и
+     * контракты ключуются по ней, а не по цвету.
+     *
+     * На этапе 1 entityId равен fraction — это чистый рефакторинг. Смысл
+     * разделения появится на этапе 5, когда отделившиеся государства
+     * начнут получать идентификаторы сверх палитры.
+     */
+    public int entityId;
+
     public int fraction;
     public String capitalName;
     public HashMap<DiplomaticEntity, Integer> relations;
@@ -37,6 +48,7 @@ public class DiplomaticEntity implements ReusableYio {
 
     @Override
     public void reset() {
+        entityId = -1;
         fraction = -1;
         capitalName = null;
         relations.clear();
@@ -69,6 +81,16 @@ public class DiplomaticEntity implements ReusableYio {
 
     public void setFraction(int fraction) {
         this.fraction = fraction;
+    }
+
+
+    public void setEntityId(int entityId) {
+        this.entityId = entityId;
+    }
+
+
+    public int getEntityId() {
+        return entityId;
     }
 
 

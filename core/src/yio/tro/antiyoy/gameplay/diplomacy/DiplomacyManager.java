@@ -193,6 +193,13 @@ public class DiplomacyManager {
             DiplomaticEntity next = poolEntities.getNext();
 
             next.setFraction(fraction);
+
+            // На этапе 1 идентификатор совпадает с цветом: базовые сущности
+            // соответствуют палитре один в один. Отделившиеся государства
+            // будут получать идентификаторы поверх палитры (этап 5),
+            // поэтому счётчик стартует за её пределами.
+            next.setEntityId(fraction);
+
             next.updateCapitalName();
             next.setHuman(fieldManager.gameController.isPlayerTurn(fraction));
 
@@ -1406,6 +1413,20 @@ public class DiplomacyManager {
     }
 
 
+    /**
+     * Поиск по устойчивой идентичности. Сериализация обязана пользоваться
+     * именно им: цвет у сущности может смениться, идентификатор — нет.
+     */
+    public DiplomaticEntity getEntityById(int entityId) {
+        for (DiplomaticEntity entity : entities) {
+            if (entity.entityId != entityId) continue;
+            return entity;
+        }
+
+        return null;
+    }
+
+
     public void showCooldownsInConsole(int fractionFilter) {
         System.out.println();
         System.out.println("DiplomacyManager.showCooldownsInConsole");
@@ -1457,13 +1478,13 @@ public class DiplomacyManager {
         String[] split = token.split(" ");
         if (split.length < 3) return;
 
-        int sFraction = Integer.valueOf(split[0]);
-        int tFraction = Integer.valueOf(split[1]);
+        int sourceEntityId = Integer.valueOf(split[0]);
+        int targetEntityId = Integer.valueOf(split[1]);
         int value = Integer.valueOf(split[2]);
 
-        DiplomaticEntity source = getEntity(sFraction);
+        DiplomaticEntity source = getEntityById(sourceEntityId);
         if (source == null) return;
-        DiplomaticEntity target = getEntity(tFraction);
+        DiplomaticEntity target = getEntityById(targetEntityId);
         if (target == null) return;
 
         changeDebt(source, target, value);

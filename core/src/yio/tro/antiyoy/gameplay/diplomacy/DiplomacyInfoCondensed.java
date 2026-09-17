@@ -98,7 +98,7 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
 
     private String getSingleMessageCode(DiplomaticMessage message) {
-        return message.type + "=" + message.getSenderFraction() + "=" + message.getRecipientFraction() + "=" + message.arg1 + "=" + message.arg2 + "=" + message.arg3;
+        return message.type + "=" + message.getSenderEntityId() + "=" + message.getRecipientEntityId() + "=" + message.arg1 + "=" + message.arg2 + "=" + message.arg3;
     }
 
 
@@ -118,7 +118,7 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
 
     private String getSingleCooldownCode(DiplomaticCooldown cooldown) {
-        return cooldown.type + " " + cooldown.counter + " " + cooldown.getOneFraction() + " " + cooldown.getTwoFraction();
+        return cooldown.type + " " + cooldown.counter + " " + cooldown.getOneEntityId() + " " + cooldown.getTwoEntityId();
     }
 
 
@@ -138,7 +138,7 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
 
     private String getSingleContractCode(DiplomaticContract contract) {
-        return contract.type + " " + contract.getOneFraction() + " " + contract.getTwoFraction() + " " + contract.dotations + " " + contract.expireCountDown;
+        return contract.type + " " + contract.getOneEntityId() + " " + contract.getTwoEntityId() + " " + contract.dotations + " " + contract.expireCountDown;
     }
 
 
@@ -192,14 +192,14 @@ public class DiplomacyInfoCondensed implements ReusableYio {
         if (split.length < 3) return;
 
         DipMessageType type = DipMessageType.valueOf(split[0]);
-        int fraction1 = Integer.valueOf(split[1]);
-        int fraction2 = Integer.valueOf(split[2]);
+        int entityId1 = Integer.valueOf(split[1]);
+        int entityId2 = Integer.valueOf(split[2]);
         String arg1 = getSplitPart(split, 3);
         String arg2 = getSplitPart(split, 4);
         String arg3 = getSplitPart(split, 5);
 
-        DiplomaticEntity entity1 = diplomacyManager.getEntity(fraction1);
-        DiplomaticEntity entity2 = diplomacyManager.getEntity(fraction2);
+        DiplomaticEntity entity1 = diplomacyManager.getEntityById(entityId1);
+        DiplomaticEntity entity2 = diplomacyManager.getEntityById(entityId2);
         if (entity1 == null || entity2 == null) return;
 
         DiplomaticMessage diplomaticMessage = diplomacyManager.log.addMessage(type, entity1, entity2);
@@ -244,11 +244,11 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
         int type = Integer.valueOf(split[0]);
         int counter = Integer.valueOf(split[1]);
-        int fraction1 = Integer.valueOf(split[2]);
-        int fraction2 = Integer.valueOf(split[3]);
+        int entityId1 = Integer.valueOf(split[2]);
+        int entityId2 = Integer.valueOf(split[3]);
 
-        DiplomaticEntity entity1 = diplomacyManager.getEntity(fraction1);
-        DiplomaticEntity entity2 = diplomacyManager.getEntity(fraction2);
+        DiplomaticEntity entity1 = diplomacyManager.getEntityById(entityId1);
+        DiplomaticEntity entity2 = diplomacyManager.getEntityById(entityId2);
         if (entity1 == null || entity2 == null) return;
 
         diplomacyManager.addCooldown(type, counter, entity1, entity2);
@@ -268,13 +268,13 @@ public class DiplomacyInfoCondensed implements ReusableYio {
         if (split.length == 0) return;
 
         int type = Integer.valueOf(split[0]);
-        int fraction1 = Integer.valueOf(split[1]);
-        int fraction2 = Integer.valueOf(split[2]);
+        int entityId1 = Integer.valueOf(split[1]);
+        int entityId2 = Integer.valueOf(split[2]);
         int dotations = Integer.valueOf(split[3]);
         int expire = Integer.valueOf(split[4]);
 
-        DiplomaticEntity entity1 = diplomacyManager.getEntity(fraction1);
-        DiplomaticEntity entity2 = diplomacyManager.getEntity(fraction2);
+        DiplomaticEntity entity1 = diplomacyManager.getEntityById(entityId1);
+        DiplomaticEntity entity2 = diplomacyManager.getEntityById(entityId2);
         if (entity1 == null || entity2 == null) return;
 
         DiplomaticContract contract = diplomacyManager.findContract(type, entity1, entity2);
@@ -388,7 +388,7 @@ public class DiplomacyInfoCondensed implements ReusableYio {
 
 
     String getSingleRelationCode(DiplomaticEntity one, DiplomaticEntity two) {
-        return one.fraction + " " + two.fraction + " " + one.getRelation(two);
+        return one.entityId + " " + two.entityId + " " + one.getRelation(two);
     }
 
 
@@ -407,12 +407,12 @@ public class DiplomacyInfoCondensed implements ReusableYio {
     void applySingleRelation(String token) {
         String[] split = token.split(" ");
 
-        int fraction1 = Integer.valueOf(split[0]);
-        int fraction2 = Integer.valueOf(split[1]);
+        int entityId1 = Integer.valueOf(split[0]);
+        int entityId2 = Integer.valueOf(split[1]);
         int relation = Integer.valueOf(split[2]);
 
-        DiplomaticEntity entity1 = diplomacyManager.getEntity(fraction1);
-        DiplomaticEntity entity2 = diplomacyManager.getEntity(fraction2);
+        DiplomaticEntity entity1 = diplomacyManager.getEntityById(entityId1);
+        DiplomaticEntity entity2 = diplomacyManager.getEntityById(entityId2);
         diplomacyManager.setRelation(entity1, entity2, relation);
     }
 
