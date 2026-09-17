@@ -2,6 +2,7 @@ package yio.tro.antiyoy.gameplay.sim;
 
 import yio.tro.antiyoy.YioGdxGame;
 import yio.tro.antiyoy.gameplay.DebugFlags;
+import yio.tro.antiyoy.gameplay.ColorsManager;
 import yio.tro.antiyoy.gameplay.GameController;
 import yio.tro.antiyoy.gameplay.Hex;
 import yio.tro.antiyoy.gameplay.Province;
@@ -46,6 +47,7 @@ public class SelfTest {
 
         prepareMatch();
 
+        checkPaletteBeyondLimit();
         checkOwnerIdInvariant();
         checkStateHashSensitivity();
         checkVersionPrefix();
@@ -210,6 +212,66 @@ public class SelfTest {
         instance.update(getDiplomacyManager());
 
         return instance.getFull();
+    }
+
+
+    /**
+     * Число государств больше не ограничено палитрой (спека, часть I).
+     *
+     * Проверяется не «код не падает», а три содержательных свойства: внутри
+     * палитры ничего не изменилось, сверх неё цвет всегда валиден, и два
+     * владельца с одинаковым цветом различаются штриховкой.
+     */
+    private void checkPaletteBeyondLimit() {
+        ColorsManager colorsManager = gameController.colorsManager;
+
+        boolean unchangedInsidePalette = true;
+        for (int ownerId = 0; ownerId < ColorsManager.PALETTE_SIZE; ownerId++) {
+            if (colorsManager.getColorByOwner(ownerId) != colorsManager.getColorByFraction(ownerId)) {
+                unchangedInsidePalette = false;
+            }
+            if (colorsManager.getHatchingByOwner(ownerId) != ColorsManager.HATCHING_NONE) {
+                unchangedInsidePalette = false;
+            }
+        }
+
+        check("внутри палитры цвет и штриховка прежние", unchangedInsidePalette);
+
+        boolean colorsValid = true;
+        for (int ownerId = 0; ownerId < 200; ownerId++) {
+            int color = colorsManager.getColorByOwner(ownerId);
+
+            if (color < 0 || color >= ColorsManager.PALETTE_SIZE) {
+                colorsValid = false;
+            }
+
+            // Нейтральный цвет не должен достаться государству.
+            if (ownerId >= ColorsManager.PALETTE_SIZE && color == GameRules.NEUTRAL_FRACTION) {
+                colorsValid = false;
+            }
+        }
+
+        check("цвет валиден для 200 владельцев подряд", colorsValid);
+
+        // Пара «цвет + штриховка» обязана быть уникальной, пока штриховка не
+        // исчерпана. Дальше повторы неизбежны, и спека их допускает.
+        int limit = ColorsManager.DISTINGUISHABLE_OWNERS;
+        boolean allDistinct = true;
+
+        for (int ownerId = 0; ownerId < limit && allDistinct; ownerId++) {
+            for (int other = ownerId + 1; other < limit; other++) {
+                if (colorsManager.getColorByOwner(ownerId) != colorsManager.getColorByOwner(other)) continue;
+                if (colorsManager.getHatchingByOwner(ownerId) != colorsManager.getHatchingByOwner(other)) continue;
+
+                allDistinct = false;
+                System.out.println("       владельцы " + ownerId + " и " + other +
+                        " неразличимы: цвет " + colorsManager.getColorByOwner(ownerId) +
+                        ", штриховка " + colorsManager.getHatchingByOwner(ownerId));
+                break;
+            }
+        }
+
+        check("первые " + limit + " владельцев различимы попарно", allDistinct);
     }
 
 
