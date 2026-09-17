@@ -10,10 +10,9 @@ import yio.tro.antiyoy.gameplay.loading.LoadingManager;
 import yio.tro.antiyoy.gameplay.loading.LoadingParameters;
 import yio.tro.antiyoy.gameplay.loading.LoadingType;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+
 import java.util.ArrayList;
 
 /**
@@ -300,32 +299,21 @@ public class SimRunner {
     }
 
 
+    /**
+     * Пишется через Gdx.files, а не через java.io: core обязан оставаться
+     * компилируемым под веб-бэкенды, где java.io недоступен. Сам режим
+     * автоматчей на вебе не запускается, но компилироваться должен.
+     */
     private void writeTextFile(String path, String content, String label) {
-        File file = new File(path);
-
-        File parent = file.getParentFile();
-        if (parent != null && !parent.exists()) {
-            parent.mkdirs();
-        }
-
-        Writer writer = null;
         try {
-            writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-            writer.write(content);
+            FileHandle file = Gdx.files.local(path);
+            file.writeString(content, false, "UTF-8");
+
+            System.out.println(label + " written: " + file.file().getAbsolutePath());
         } catch (Exception exception) {
             System.out.println("SimRunner: failed to write " + label);
             exception.printStackTrace();
-            return;
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (Exception ignored) {
-                }
-            }
         }
-
-        System.out.println(label + " written: " + file.getAbsolutePath());
     }
 
 

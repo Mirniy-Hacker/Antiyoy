@@ -48,6 +48,34 @@ public class SimMatchResult {
     }
 
 
+    /**
+     * Своё форматирование вместо String.format: GWT его не поддерживает, а
+     * веб выбран основным путём доставки. Заодно не зависит от локали —
+     * в CSV разделителем дробной части обязана быть точка.
+     */
+    private static String formatShare(double value) {
+        long scaled = Math.round(value * 10000d);
+
+        long whole = scaled / 10000;
+        long fraction = scaled % 10000;
+
+        if (fraction < 0) {
+            fraction = -fraction;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(whole).append('.');
+
+        if (fraction < 1000) builder.append('0');
+        if (fraction < 100) builder.append('0');
+        if (fraction < 10) builder.append('0');
+
+        builder.append(fraction);
+
+        return builder.toString();
+    }
+
+
     public String toCsvRow() {
         StringBuilder builder = new StringBuilder();
 
@@ -62,7 +90,7 @@ public class SimMatchResult {
                 .append(unitsProduced).append(',')
                 .append(unitsDied).append(',')
                 .append(secededRegions).append(',')
-                .append(String.format(java.util.Locale.US, "%.4f", averageLeaderMapShare)).append(',')
+                .append(formatShare(averageLeaderMapShare)).append(',')
                 .append(fieldHash).append(',')
                 .append(diplomacyHash);
 
