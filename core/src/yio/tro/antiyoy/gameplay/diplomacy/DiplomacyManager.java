@@ -1218,6 +1218,7 @@ public class DiplomacyManager {
         next.setExpireCountDown(DiplomaticContract.getDurationByType(contractType));
 
         contracts.add(next);
+        fieldManager.gameController.matchStatistics.onContractSigned();
         return next;
     }
 
@@ -1350,6 +1351,8 @@ public class DiplomacyManager {
         removeContract(DiplomaticContract.TYPE_PIECE, initiator, entity);
         resetDebtsBetweenEntities(initiator, entity);
         removeDotationsBetweenEntities(initiator, entity);
+
+        fieldManager.gameController.matchStatistics.onWarDeclared();
 
         onRelationsChanged();
         return true;

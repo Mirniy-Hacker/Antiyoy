@@ -21,6 +21,8 @@ import yio.tro.antiyoy.gameplay.name_generator.CityNameGenerator;
 import yio.tro.antiyoy.gameplay.name_generator.CustomCityNamesManager;
 import yio.tro.antiyoy.gameplay.replays.ReplaySaveSystem;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
+import yio.tro.antiyoy.gameplay.sim.SimConfig;
+import yio.tro.antiyoy.gameplay.sim.SimRunner;
 import yio.tro.antiyoy.gameplay.skins.SkinManager;
 import yio.tro.antiyoy.gameplay.user_levels.UserLevelFactory;
 import yio.tro.antiyoy.gameplay.user_levels.UserLevelsManager;
@@ -65,6 +67,7 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     public float defaultBubbleRadius, pressX, pressY, animX, animY, animRadius;
     double bubbleGravity;
     boolean loadedResources;
+    private boolean simulationPerformed;
     boolean ignoreDrag;
     public boolean simpleTransitionAnimation, useMenuMasks;
     TextureRegion splash;
@@ -491,6 +494,12 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
             return;
         }
 
+        // Режим автоматчей: партии гоняются вместо обычного игрового цикла.
+        if (SimConfig.getInstance().enabled) {
+            checkToRunSimulation();
+            return;
+        }
+
         try {
             move();
         } catch (Exception exception) {
@@ -516,6 +525,16 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         stage.draw();
     }
 
+
+
+    private void checkToRunSimulation() {
+        if (simulationPerformed) return;
+        simulationPerformed = true;
+
+        new SimRunner(this).perform();
+
+        Gdx.app.exit();
+    }
 
     private void onCatchedExceptionInMove(Exception exception) {
         if (alreadyShownErrorMessageOnce) return;

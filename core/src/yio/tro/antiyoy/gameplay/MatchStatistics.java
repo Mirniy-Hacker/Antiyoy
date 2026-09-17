@@ -8,6 +8,7 @@ public class MatchStatistics {
 
     public int turnsMade, unitsDied, unitsProduced, moneySpent;
     public int firstPlayerMoneySpent;
+    public int warsDeclared, contractsSigned;
     public int timeCount;
     public int friendshipsBroken;
 
@@ -25,6 +26,8 @@ public class MatchStatistics {
         timeCount = 0;
         firstPlayerMoneySpent = 0;
         friendshipsBroken = 0;
+        warsDeclared = 0;
+        contractsSigned = 0;
     }
 
 
@@ -36,6 +39,8 @@ public class MatchStatistics {
         timeCount = source.timeCount;
         firstPlayerMoneySpent = source.firstPlayerMoneySpent;
         friendshipsBroken = source.friendshipsBroken;
+        warsDeclared = source.warsDeclared;
+        contractsSigned = source.contractsSigned;
     }
 
 
@@ -60,6 +65,16 @@ public class MatchStatistics {
 
     void onTurnMade() {
         turnsMade++;
+    }
+
+
+    public void onWarDeclared() {
+        warsDeclared++;
+    }
+
+
+    public void onContractSigned() {
+        contractsSigned++;
     }
 
 
