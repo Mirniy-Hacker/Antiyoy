@@ -26,8 +26,9 @@ public class Lwjgl3Launcher {
         new Lwjgl3Application(new YioGdxGame(), createConfiguration());
 
         // Lwjgl3Application возвращает управление после Gdx.app.exit().
-        // Самопроверка обязана валить процесс, иначе она бесполезна в CI.
-        if (SimConfig.getInstance().selfTest) {
+        // Проверки обязаны валить процесс, иначе они бесполезны в CI.
+        SimConfig config = SimConfig.getInstance();
+        if (config.selfTest || config.replayCheckMatches > 0) {
             System.exit(YioGdxGame.getSimulationExitCode());
         }
     }
@@ -108,6 +109,10 @@ public class Lwjgl3Launcher {
             } else if (key.equals("--trace")) {
                 config.tracePath = value;
                 i++;
+            } else if (key.equals("--replay-check")) {
+                config.enabled = true;
+                config.replayCheckMatches = Integer.parseInt(value);
+                i++;
             }
         }
     }
@@ -155,5 +160,6 @@ public class Lwjgl3Launcher {
         System.out.println();
         System.out.println("Самопроверка:");
         System.out.println("  --selftest         сериализация и флаги; ненулевой код возврата при провале");
+        System.out.println("  --replay-check N   проверка воспроизводимости реплеев на N партиях");
     }
 }

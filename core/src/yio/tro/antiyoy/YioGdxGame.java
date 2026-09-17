@@ -532,8 +532,14 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         if (simulationPerformed) return;
         simulationPerformed = true;
 
-        if (SimConfig.getInstance().selfTest) {
+        SimConfig config = SimConfig.getInstance();
+
+        if (config.selfTest) {
             boolean success = new yio.tro.antiyoy.gameplay.sim.SelfTest(this).perform();
+            simulationExitCode = success ? 0 : 1;
+        } else if (config.replayCheckMatches > 0) {
+            boolean success = new yio.tro.antiyoy.gameplay.sim.ReplayCheck(
+                    this, config.replayCheckMatches, config.diplomacy).perform();
             simulationExitCode = success ? 0 : 1;
         } else {
             new SimRunner(this).perform();

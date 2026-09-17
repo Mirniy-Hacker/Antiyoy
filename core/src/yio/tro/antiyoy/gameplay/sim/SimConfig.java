@@ -13,6 +13,9 @@ public class SimConfig {
 
     public boolean enabled;
     public boolean selfTest;
+
+    /** Проверка воспроизводимости реплеев: число партий, 0 — выключено. */
+    public int replayCheckMatches;
     public int matches;
     public long seed;
     public int fractionsQuantity;
@@ -48,6 +51,7 @@ public class SimConfig {
     public void defaultValues() {
         enabled = false;
         selfTest = false;
+        replayCheckMatches = 0;
         matches = 100;
         seed = 0;
         fractionsQuantity = 5;

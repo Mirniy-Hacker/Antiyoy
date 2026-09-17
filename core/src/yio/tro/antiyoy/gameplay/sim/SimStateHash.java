@@ -30,12 +30,26 @@ public class SimStateHash {
     public static long computeField(GameController gameController) {
         long hash = SEED;
 
+        hash = mix(hash, computeHexes(gameController));
+        hash = mix(hash, computeProvinces(gameController));
+        hash = mix(hash, gameController.turn);
+
+        return hash;
+    }
+
+
+    /**
+     * Только гексы: владелец, объект, юнит. Отделено от провинций, чтобы при
+     * расхождении было видно, разъехалась карта или экономика.
+     */
+    public static long computeHexes(GameController gameController) {
+        long hash = SEED;
+
         int width = gameController.fieldManager.fWidth;
         int height = gameController.fieldManager.fHeight;
 
         hash = mix(hash, width);
         hash = mix(hash, height);
-        hash = mix(hash, gameController.turn);
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -44,9 +58,12 @@ public class SimStateHash {
             }
         }
 
-        hash = mix(hash, hashProvinces(gameController));
-
         return hash;
+    }
+
+
+    public static long computeProvinces(GameController gameController) {
+        return hashProvinces(gameController);
     }
 
 
