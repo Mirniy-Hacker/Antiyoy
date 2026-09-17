@@ -877,8 +877,15 @@ public class FieldManager implements EncodeableYio{
         if (isUnmergeableSituationDetected(province, hex, strength)) return false;
 
         gameController.takeSnapshot();
-        province.money -= GameRules.PRICE_UNIT * strength;
-        gameController.getMatchStatistics().onMoneySpent(gameController.turn, GameRules.PRICE_UNIT * strength);
+
+        // Цена спрашивается у провинции: она знает, сколько юнитов уже
+        // куплено в этот ход (спека, 2.2).
+        int price = province.getCurrentUnitPrice(strength);
+
+        province.money -= price;
+        province.onUnitBought();
+
+        gameController.getMatchStatistics().onMoneySpent(gameController.turn, price);
         gameController.replayManager.onUnitBuilt(province, hex, strength);
 
         if (canUnitBeBuiltPeacefully(province, hex)) {
@@ -967,6 +974,69 @@ public class FieldManager implements EncodeableYio{
         // can't build tower
         tickleMoneySign();
         return false;
+    }
+
+
+    /**
+     * Автопостройка ферм. Спека, часть IX: ставит фермы подряд, пока в казне
+     * не останется заданный остаток.
+     *
+     * Остаток задаётся, а не подразумевается нулевым: игрок почти всегда
+     * хочет оставить на юнитов.
+     *
+     * Возвращает число построенных ферм.
+     */
+    public int autoBuildFarms(Province province, int moneyToKeep) {
+        if (province == null) return 0;
+        if (!GameRules.areUiImprovementsEnabled()) return 0;
+
+        int built = 0;
+
+        // Потолок на случай, если постройка почему-то перестанет тратить
+        // деньги: молчаливый вечный цикл здесь недопустим.
+        int limit = province.hexList.size() + 1;
+
+        while (built < limit) {
+            if (province.money - province.getCurrentFarmPrice() < moneyToKeep) break;
+
+            Hex hex = getBestHexForNewFarm(province);
+            if (hex == null) break;
+
+            if (!buildFarm(province, hex)) break;
+
+            built++;
+        }
+
+        return built;
+    }
+
+
+    /**
+     * Место под новую ферму: свободный гекс провинции рядом с городом или
+     * другой фермой. Из подходящих берётся первый по координатам, чтобы
+     * результат не зависел от порядка обхода списка.
+     */
+    public Hex getBestHexForNewFarm(Province province) {
+        Hex best = null;
+
+        for (Hex hex : province.hexList) {
+            if (!hex.isFree()) continue;
+            if (hex.containsUnit()) continue;
+            if (hex.containsBuilding()) continue;
+
+            if (!hex.hasThisSupportiveObjectNearby(Obj.TOWN)
+                    && !hex.hasThisSupportiveObjectNearby(Obj.FARM)) {
+                continue;
+            }
+
+            if (best == null
+                    || hex.index1 < best.index1
+                    || (hex.index1 == best.index1 && hex.index2 < best.index2)) {
+                best = hex;
+            }
+        }
+
+        return best;
     }
 
 

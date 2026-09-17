@@ -33,7 +33,7 @@ public class Debt implements EncodeableYio{
 
     @Override
     public String encode() {
-        return source.fraction + " " + target.fraction + " " + value;
+        return source.entityId + " " + target.entityId + " " + value;
     }
 
 

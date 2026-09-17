@@ -246,7 +246,7 @@ public class DebugActionsManager {
         if (friend == null) return;
 
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
-            if (activeHex.fraction != friend.fraction) continue;
+            if (activeHex.getOwnerId() != friend.entityId) continue;
 
             gameController.fieldManager.setHexFraction(activeHex, GameRules.NEUTRAL_FRACTION);
         }

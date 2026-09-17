@@ -266,8 +266,16 @@ public class RenderBackgroundCache extends GameRender {
             pos = hex.getPos();
             if (!isPosInCacheFrame(pos, hexViewSize)) continue;
 
-            currentHexTexture = texturesManager.getHexTextureByFraction(hex.fraction);
+            currentHexTexture = texturesManager.getHexTextureByOwner(hex.getOwnerId());
             batchCache.draw(currentHexTexture, pos.x - 0.99f * hexViewSize, pos.y - 0.99f * hexViewSize, 2 * 0.99f * hexViewSize, 2 * 0.99f * hexViewSize);
+
+            // Штриховка кладётся тем же слоем, сразу поверх гекса (спека, 1.2).
+            // Её получают только владельцы, которым не хватило цвета, поэтому
+            // пока государств не больше палитры, на экране ничего не меняется.
+            TextureRegion hatching = texturesManager.getHatchingByOwner(hex.getOwnerId());
+            if (hatching != null) {
+                batchCache.draw(hatching, pos.x - 0.99f * hexViewSize, pos.y - 0.99f * hexViewSize, 2 * 0.99f * hexViewSize, 2 * 0.99f * hexViewSize);
+            }
         }
     }
 

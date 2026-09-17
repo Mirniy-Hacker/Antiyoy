@@ -32,6 +32,27 @@ public class DiplomaticMessage implements ReusableYio {
     }
 
 
+    /**
+     * Идентичность отправителя. Сериализация пользуется ею, а не цветом.
+     */
+    public int getSenderEntityId() {
+        if (sender == null) {
+            return -1;
+        }
+
+        return sender.entityId;
+    }
+
+
+    public int getRecipientEntityId() {
+        if (recipient == null) {
+            return -1;
+        }
+
+        return recipient.entityId;
+    }
+
+
     public int getSenderFraction() {
         if (sender == null) {
             return -1;

@@ -1,8 +1,11 @@
 package yio.tro.antiyoy.gameplay.game_view;
 
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import yio.tro.antiyoy.SettingsManager;
 import yio.tro.antiyoy.Storage3xTexture;
+import yio.tro.antiyoy.gameplay.ColorsManager;
 import yio.tro.antiyoy.gameplay.GameController;
 import yio.tro.antiyoy.gameplay.Unit;
 import yio.tro.antiyoy.gameplay.skins.SkinManager;
@@ -23,6 +26,15 @@ public class GameTexturesManager {
     public Storage3xTexture castleTexture, strongTowerTexture, farmTexture[];
     TextureRegion hexColor4, hexColor5, hexColor6;
     public AtlasLoader atlasLoader;
+
+    /**
+     * Штриховка поверх гекса для государств, которым не хватило цвета.
+     *
+     * Рисуется кодом, а не лежит файлами: цвета гексов заданы отдельными
+     * PNG в каждом из скинов, и добавлять туда ещё по две картинки на скин
+     * означало бы чинить одно и то же в десяти местах.
+     */
+    private TextureRegion hatchingTextures[];
 
 
     public GameTexturesManager(GameView gameView) {
@@ -172,6 +184,101 @@ public class GameTexturesManager {
 
     public TextureRegion getHexTextureByFraction(int fraction) {
         return getHexTexture(getGameController().getColorByFraction(fraction));
+    }
+
+
+    /**
+     * Цвет гекса по его владельцу. После развода владельца и цвета именно
+     * это правильная точка входа: fraction годится только там, где речь
+     * идёт буквально о цвете.
+     */
+    public TextureRegion getHexTextureByOwner(int ownerId) {
+        return getHexTexture(getGameController().colorsManager.getColorByOwner(ownerId));
+    }
+
+
+    /**
+     * Полосы и точки генерируются один раз, размером с текстуру гекса.
+     * Цвет — полупрозрачный чёрный: он ложится поверх любого цвета гекса и
+     * любого скина, не завися от их палитры.
+     */
+    private void createHatchingTextures() {
+        if (hatchingTextures != null) return;
+
+        hatchingTextures = new TextureRegion[ColorsManager.HATCHING_VARIANTS];
+
+        hatchingTextures[ColorsManager.HATCHING_NONE] = null;
+        hatchingTextures[ColorsManager.HATCHING_DIAGONAL] = createDiagonalHatching();
+        hatchingTextures[ColorsManager.HATCHING_DOTTED] = createDottedHatching();
+    }
+
+
+    private static final int HATCHING_SIZE = 64;
+    private static final int HATCHING_COLOR = 0x00000055;
+
+
+    private TextureRegion createDiagonalHatching() {
+        Pixmap pixmap = new Pixmap(HATCHING_SIZE, HATCHING_SIZE, Pixmap.Format.RGBA8888);
+        pixmap.setBlending(Pixmap.Blending.None);
+        pixmap.setColor(0x00000000);
+        pixmap.fill();
+
+        pixmap.setColor(HATCHING_COLOR);
+        for (int offset = -HATCHING_SIZE; offset < HATCHING_SIZE; offset += 10) {
+            for (int thickness = 0; thickness < 3; thickness++) {
+                pixmap.drawLine(offset + thickness, 0,
+                        offset + thickness + HATCHING_SIZE, HATCHING_SIZE);
+            }
+        }
+
+        return wrapIntoRegion(pixmap);
+    }
+
+
+    private TextureRegion createDottedHatching() {
+        Pixmap pixmap = new Pixmap(HATCHING_SIZE, HATCHING_SIZE, Pixmap.Format.RGBA8888);
+        pixmap.setBlending(Pixmap.Blending.None);
+        pixmap.setColor(0x00000000);
+        pixmap.fill();
+
+        pixmap.setColor(HATCHING_COLOR);
+        for (int x = 4; x < HATCHING_SIZE; x += 11) {
+            for (int y = 4; y < HATCHING_SIZE; y += 11) {
+                pixmap.fillCircle(x, y, 2);
+            }
+        }
+
+        return wrapIntoRegion(pixmap);
+    }
+
+
+    private TextureRegion wrapIntoRegion(Pixmap pixmap) {
+        Texture texture = new Texture(pixmap);
+        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        pixmap.dispose();
+
+        return new TextureRegion(texture);
+    }
+
+
+    /**
+     * Возвращает null для варианта «без штриховки»: вызывающий код рисует
+     * наложение только когда оно есть.
+     */
+    public TextureRegion getHatchingTexture(int variant) {
+        createHatchingTextures();
+
+        if (variant < 0 || variant >= hatchingTextures.length) return null;
+
+        return hatchingTextures[variant];
+    }
+
+
+    public TextureRegion getHatchingByOwner(int ownerId) {
+        int variant = getGameController().colorsManager.getHatchingByOwner(ownerId);
+        if (variant == ColorsManager.HATCHING_NONE) return null;
+
+        return getHatchingTexture(variant);
     }
 
 

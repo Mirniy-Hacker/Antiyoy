@@ -1,0 +1,43 @@
+# Gradle
+.gradle/
+build/
+*/build/
+gradle-app.setting
+.gradletasknamecache
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.vscode/
+*.launch
+.classpath
+.project
+.settings/
+bin/
+
+# Java
+*.class
+hs_err_pid*
+
+# libGDX / MobiVM
+ios/robovm-build/
+ios/build/
+android/libs/
+*.apk
+*.ipa
+*.dSYM/
+
+# Локальное окружение
+local.properties
+gradle.properties.local
+
+# Вывод автоматчей. Сырые прогоны игнорируются; эталонные CSV для сравнения
+# между этапами кладутся в docs/baselines/ и коммитятся осознанно.
+sim-results/
+
+# OS
+.DS_Store
+Thumbs.db

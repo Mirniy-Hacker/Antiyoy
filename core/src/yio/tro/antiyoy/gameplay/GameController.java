@@ -17,6 +17,7 @@ import yio.tro.antiyoy.gameplay.loading.LoadingParameters;
 import yio.tro.antiyoy.gameplay.loading.LoadingType;
 import yio.tro.antiyoy.gameplay.messages.MessagesManager;
 import yio.tro.antiyoy.gameplay.replays.ReplayManager;
+import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.gameplay.rules.Ruleset;
 import yio.tro.antiyoy.gameplay.rules.RulesetGeneric;
@@ -448,7 +449,7 @@ public class GameController {
         fieldManager.clearProvincesList();
         ArrayList<Hex> hexList = new ArrayList<>();
         for (Hex activeHex : fieldManager.activeHexes) {
-            if (activeHex.fraction == winnerFraction) {
+            if (activeHex.sameOwner(winnerFraction)) {
                 hexList.add(activeHex);
                 break;
             }
@@ -566,8 +567,31 @@ public class GameController {
         for (Province province : fieldManager.provinces) {
             if (isCurrentTurn(province.getFraction())) {
                 province.money += province.getProfit();
+
+                applyTreasuryLeak(province);
+
+                // Удорожание найма считается внутри хода, поэтому счётчик
+                // обнуляется здесь же (спека, 2.2).
+                province.onTurnStarted();
             }
         }
+    }
+
+
+    /**
+     * Потолок казны и утечка излишка. Спека, 2.1: при доходе 80 потолок
+     * 1600, сверх него тает десятая часть за ход.
+     *
+     * Единственная точка начисления дохода в игре — отсюда и единственная
+     * точка утечки.
+     */
+    private void applyTreasuryLeak(Province province) {
+        if (!GameRules.isTreasuryCapEnabled()) return;
+
+        int leak = EconomyTuning.getTreasuryLeak(province.money, province.getIncome());
+        if (leak <= 0) return;
+
+        province.money -= leak;
     }
 
 

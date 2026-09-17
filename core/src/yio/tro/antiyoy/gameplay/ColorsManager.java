@@ -6,6 +6,33 @@ import java.util.ArrayList;
 
 public class ColorsManager {
 
+    /**
+     * Сколько в игре различимых цветов гексов. Это число текстур, а не
+     * предел числа государств: сверх палитры цвета начинают повторяться, и
+     * совпавшие различаются штриховкой (спека, 1.2).
+     */
+    public static final int PALETTE_SIZE = 11;
+
+    public static final int HATCHING_NONE = 0;
+    public static final int HATCHING_DIAGONAL = 1;
+    public static final int HATCHING_DOTTED = 2;
+
+    public static final int HATCHING_VARIANTS = 3;
+
+    /** Цвета, доступные государствам: вся палитра, кроме нейтрального. */
+    public static final int NON_NEUTRAL_COLORS = PALETTE_SIZE - 1;
+
+    /**
+     * Сколько владельцев различимы на глаз: палитра без штриховки плюс по
+     * набору цветов на каждый непустой вариант штриховки.
+     *
+     * Дальше пары начинают повторяться — это предел метода, а не ошибка.
+     * Спека допускает совпадение цветов, требуя лишь различать их
+     * штриховкой, пока она не исчерпана.
+     */
+    public static final int DISTINGUISHABLE_OWNERS =
+            PALETTE_SIZE + NON_NEUTRAL_COLORS * (HATCHING_VARIANTS - 1);
+
     GameController gameController;
     public int colorOffset;
 
@@ -34,6 +61,47 @@ public class ColorsManager {
         fraction = getLimitedByMaxFractionsValue(fraction);
 
         return fraction;
+    }
+
+
+    /**
+     * Цвет владельца. Для владельцев в пределах палитры возвращает ровно то
+     * же, что и раньше, — поведение старых партий не меняется.
+     *
+     * Сверх палитры цвета идут по кругу: число государств больше не
+     * ограничено числом текстур (спека, часть I).
+     */
+    public int getColorByOwner(int ownerId) {
+        if (ownerId < 0) return 0;
+        if (ownerId < PALETTE_SIZE) return getColorByFraction(ownerId);
+
+        // Сверх палитры цвета берутся из набора без нейтрального: он занят.
+        // Раньше здесь стоял сдвиг на единицу при попадании в нейтральный, и
+        // он ломал главное свойство — два владельца одного круга получали
+        // один цвет и одну штриховку, то есть становились неразличимы.
+        int slot = (ownerId - PALETTE_SIZE) % NON_NEUTRAL_COLORS;
+
+        if (slot < GameRules.NEUTRAL_FRACTION) return slot;
+
+        return slot + 1;
+    }
+
+
+    /**
+     * Штриховка поверх гекса. Нужна, когда палитра исчерпана и один цвет
+     * достался двум государствам: без неё их не различить.
+     *
+     * Владельцы в пределах палитры штриховки не получают, поэтому до
+     * появления новых государств на экране ничего не меняется.
+     */
+    public int getHatchingByOwner(int ownerId) {
+        if (ownerId < PALETTE_SIZE) return HATCHING_NONE;
+
+        // Владельцам сверх палитры пустой вариант не достаётся: иначе они
+        // слились бы с теми, кому цвет достался без штриховки.
+        int lap = (ownerId - PALETTE_SIZE) / NON_NEUTRAL_COLORS;
+
+        return HATCHING_DIAGONAL + lap % (HATCHING_VARIANTS - 1);
     }
 
 
@@ -87,7 +155,11 @@ public class ColorsManager {
         for (Hex activeHex : activeHexes) {
             if (!GameRules.slayRules && activeHex.isNeutral()) continue;
 
-            activeHex.fraction = gameController.colorsManager.getFractionByColor(activeHex.fraction);
+            // Это не перекраска, а переиндексация владельцев: меняются обе
+            // величины разом. После этапа 1 менять здесь можно будет только
+            // цвет, но пока владелец и цвет обязаны совпадать.
+            activeHex.setOwnerSilently(
+                    gameController.colorsManager.getFractionByColor(activeHex.getOwnerId()));
         }
 
         gameController.fieldManager.detectProvinces();
@@ -107,7 +179,7 @@ public class ColorsManager {
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
             if (!GameRules.slayRules && activeHex.isNeutral()) continue;
 
-            activeHex.fraction = getShiftedColor(activeHex.fraction, delta);
+            activeHex.setOwnerSilently(getShiftedColor(activeHex.getOwnerId(), delta));
         }
     }
 

@@ -21,6 +21,8 @@ import yio.tro.antiyoy.gameplay.name_generator.CityNameGenerator;
 import yio.tro.antiyoy.gameplay.name_generator.CustomCityNamesManager;
 import yio.tro.antiyoy.gameplay.replays.ReplaySaveSystem;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
+import yio.tro.antiyoy.gameplay.sim.SimConfig;
+import yio.tro.antiyoy.gameplay.sim.SimRunner;
 import yio.tro.antiyoy.gameplay.skins.SkinManager;
 import yio.tro.antiyoy.gameplay.user_levels.UserLevelFactory;
 import yio.tro.antiyoy.gameplay.user_levels.UserLevelsManager;
@@ -65,6 +67,8 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     public float defaultBubbleRadius, pressX, pressY, animX, animY, animRadius;
     double bubbleGravity;
     boolean loadedResources;
+    private boolean simulationPerformed;
+    private static int simulationExitCode;
     boolean ignoreDrag;
     public boolean simpleTransitionAnimation, useMenuMasks;
     TextureRegion splash;
@@ -491,6 +495,12 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
             return;
         }
 
+        // Режим автоматчей: партии гоняются вместо обычного игрового цикла.
+        if (SimConfig.getInstance().enabled) {
+            checkToRunSimulation();
+            return;
+        }
+
         try {
             move();
         } catch (Exception exception) {
@@ -516,6 +526,35 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
         stage.draw();
     }
 
+
+
+    private void checkToRunSimulation() {
+        if (simulationPerformed) return;
+        simulationPerformed = true;
+
+        SimConfig config = SimConfig.getInstance();
+
+        if (config.selfTest) {
+            boolean success = new yio.tro.antiyoy.gameplay.sim.SelfTest(this).perform();
+            simulationExitCode = success ? 0 : 1;
+        } else if (config.replayCheckMatches > 0) {
+            boolean success = new yio.tro.antiyoy.gameplay.sim.ReplayCheck(
+                    this, config.replayCheckMatches, config.diplomacy).perform();
+            simulationExitCode = success ? 0 : 1;
+        } else {
+            new SimRunner(this).perform();
+        }
+
+        Gdx.app.exit();
+    }
+
+
+    /**
+     * Код возврата процесса: нужен, чтобы самопроверка валила сборку в CI.
+     */
+    public static int getSimulationExitCode() {
+        return simulationExitCode;
+    }
 
     private void onCatchedExceptionInMove(Exception exception) {
         if (alreadyShownErrorMessageOnce) return;
@@ -704,6 +743,14 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
     }
 
 
+    // Метод появился в libGDX 1.9.12. Раньше отменённые касания приходили
+    // как touchUp, поэтому делегирование туда воспроизводит прежнее поведение.
+    @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return touchUp(screenX, screenY, pointer, button);
+    }
+
+
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         try {
@@ -794,7 +841,11 @@ public class YioGdxGame extends ApplicationAdapter implements InputProcessor {
 
 
     @Override
-    public boolean scrolled(int amount) {
+    public boolean scrolled(float amountX, float amountY) {
+        // libGDX сменил сигнатуру scrolled(int) на scrolled(float, float).
+        // Вертикальная прокрутка по-прежнему даёт ±1 за щелчок колеса.
+        int amount = Math.round(amountY);
+
         if (menuControllerYio.onMouseWheelScrolled(amount)) return true; // UI can catch mouse scroll
 
         if (gameView.appearFactor.get() > 0.1) {

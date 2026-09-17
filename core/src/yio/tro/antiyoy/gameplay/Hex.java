@@ -17,6 +17,16 @@ public class Hex implements ReusableYio, EncodeableYio{
     public FieldManager fieldManager;
     float cos60, sin60;
     public int fraction, previousFraction, objectInside;
+
+    /**
+     * Владелец гекса. Спека, часть I: принадлежность определяется им, а
+     * fraction остаётся только для отрисовки.
+     *
+     * На этапе 1 ownerId всегда равен fraction — это чистый рефакторинг без
+     * изменений в поведении. Расходиться они начнут после него, когда
+     * появятся новые государства сверх палитры.
+     */
+    public int ownerId;
     long animStartTime;
     boolean blockToTreeFromExpanding, canContainObjects;
     public FactorYio animFactor, selectionFactor;
@@ -96,8 +106,35 @@ public class Hex implements ReusableYio, EncodeableYio{
     public void setFraction(int fraction) {
         previousFraction = this.fraction;
         this.fraction = fraction;
+        this.ownerId = fraction;
         animFactor.appear(1, 1);
         animFactor.setValues(0, 0);
+    }
+
+
+    /**
+     * Единственная точка смены владельца без побочных эффектов анимации.
+     * Нужна генератору карты и восстановлению состояния, которые заполняют
+     * поле напрямую.
+     */
+    public void setOwnerSilently(int ownerId) {
+        this.ownerId = ownerId;
+        this.fraction = ownerId;
+    }
+
+
+    public int getOwnerId() {
+        return ownerId;
+    }
+
+
+    public boolean sameOwner(Hex hex) {
+        return ownerId == hex.ownerId;
+    }
+
+
+    public boolean sameOwner(int ownerId) {
+        return this.ownerId == ownerId;
     }
 
 
@@ -159,6 +196,7 @@ public class Hex implements ReusableYio, EncodeableYio{
         Hex record = new Hex(index1, index2, fieldPos, fieldManager, true);
         record.active = active;
         record.fraction = fraction;
+        record.ownerId = ownerId;
         record.objectInside = objectInside;
         record.selected = selected;
         if (unit != null) {
@@ -278,7 +316,7 @@ public class Hex implements ReusableYio, EncodeableYio{
             if (adjacentHex == null) continue;
             if (adjacentHex.isNullHex()) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != fraction) continue;
+            if (!adjacentHex.sameOwner(ownerId)) continue;
             if (adjacentHex.objectInside != objectIndex) continue;
             return true;
         }
@@ -304,18 +342,22 @@ public class Hex implements ReusableYio, EncodeableYio{
     }
 
 
+    // Проверки принадлежности переведены на ownerId (спека, часть I).
+    // Пока ownerId равен fraction, результат тот же; после этапа 1 владелец
+    // и цвет разойдутся, и сравнивать цвета станет неверно.
+
     public boolean sameFraction(int fraction) {
-        return this.fraction == fraction;
+        return this.ownerId == fraction;
     }
 
 
     public boolean sameFraction(Province province) {
-        return fraction == province.getFraction();
+        return ownerId == province.getFraction();
     }
 
 
     public boolean sameFraction(Hex hex) {
-        return fraction == hex.fraction;
+        return ownerId == hex.ownerId;
     }
 
 
@@ -396,7 +438,7 @@ public class Hex implements ReusableYio, EncodeableYio{
 
 
     public boolean isNeutral() {
-        return fraction == GameRules.NEUTRAL_FRACTION;
+        return ownerId == GameRules.NEUTRAL_FRACTION;
     }
 
 

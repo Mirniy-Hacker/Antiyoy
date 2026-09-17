@@ -458,7 +458,7 @@ public class TutorialScriptGenericRules extends TutorialScript{
     private void setHexToRespondByFraction(int fraction) {
         ignoreAll();
         for (Hex activeHex : gameController.fieldManager.activeHexes) {
-            if (activeHex.fraction == fraction && !activeHex.containsUnit()) {
+            if (activeHex.sameOwner(fraction) && !activeHex.containsUnit()) {
                 activeHex.setIgnoreTouch(false);
             }
         }

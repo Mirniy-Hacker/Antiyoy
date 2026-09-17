@@ -35,6 +35,16 @@ public class DiplomacyManager {
     public DiplomaticAI diplomaticAI;
     public ExchangePerformer exchangePerformer;
 
+    /**
+     * Поднят, пока состояние восстанавливается из сохранённой строки.
+     *
+     * Восстановление заново прогоняет setRelation и addContract, поэтому без
+     * этого флага статистика матча накручивалась бы при каждой отмене хода и
+     * при каждой загрузке. В LevelSnapshot.recreate() статистика вдобавок
+     * восстанавливается раньше дипломатии, так что порядок не спасает.
+     */
+    public boolean restoringState;
+
 
     public DiplomacyManager(FieldManager fieldManager) {
         this.fieldManager = fieldManager;
@@ -183,6 +193,13 @@ public class DiplomacyManager {
             DiplomaticEntity next = poolEntities.getNext();
 
             next.setFraction(fraction);
+
+            // На этапе 1 идентификатор совпадает с цветом: базовые сущности
+            // соответствуют палитре один в один. Отделившиеся государства
+            // будут получать идентификаторы поверх палитры (этап 5),
+            // поэтому счётчик стартует за её пределами.
+            next.setEntityId(fraction);
+
             next.updateCapitalName();
             next.setHuman(fieldManager.gameController.isPlayerTurn(fraction));
 
@@ -583,7 +600,7 @@ public class DiplomacyManager {
             if (adjacentHex == null) continue;
             if (adjacentHex.isNullHex()) continue;
             if (!adjacentHex.active) continue;
-            if (adjacentHex.fraction != hex.fraction) continue;
+            if (!adjacentHex.sameOwner(hex)) continue;
             return false;
         }
 
@@ -1218,6 +1235,11 @@ public class DiplomacyManager {
         next.setExpireCountDown(DiplomaticContract.getDurationByType(contractType));
 
         contracts.add(next);
+
+        if (!restoringState) {
+            fieldManager.gameController.matchStatistics.onContractSigned();
+        }
+
         return next;
     }
 
@@ -1351,6 +1373,10 @@ public class DiplomacyManager {
         resetDebtsBetweenEntities(initiator, entity);
         removeDotationsBetweenEntities(initiator, entity);
 
+        if (!restoringState) {
+            fieldManager.gameController.matchStatistics.onWarDeclared();
+        }
+
         onRelationsChanged();
         return true;
     }
@@ -1380,6 +1406,20 @@ public class DiplomacyManager {
     public DiplomaticEntity getEntity(int fraction) {
         for (DiplomaticEntity entity : entities) {
             if (entity.fraction != fraction) continue;
+            return entity;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Поиск по устойчивой идентичности. Сериализация обязана пользоваться
+     * именно им: цвет у сущности может смениться, идентификатор — нет.
+     */
+    public DiplomaticEntity getEntityById(int entityId) {
+        for (DiplomaticEntity entity : entities) {
+            if (entity.entityId != entityId) continue;
             return entity;
         }
 
@@ -1438,13 +1478,13 @@ public class DiplomacyManager {
         String[] split = token.split(" ");
         if (split.length < 3) return;
 
-        int sFraction = Integer.valueOf(split[0]);
-        int tFraction = Integer.valueOf(split[1]);
+        int sourceEntityId = Integer.valueOf(split[0]);
+        int targetEntityId = Integer.valueOf(split[1]);
         int value = Integer.valueOf(split[2]);
 
-        DiplomaticEntity source = getEntity(sFraction);
+        DiplomaticEntity source = getEntityById(sourceEntityId);
         if (source == null) return;
-        DiplomaticEntity target = getEntity(tFraction);
+        DiplomaticEntity target = getEntityById(targetEntityId);
         if (target == null) return;
 
         changeDebt(source, target, value);

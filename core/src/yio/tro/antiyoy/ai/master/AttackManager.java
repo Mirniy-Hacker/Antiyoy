@@ -89,7 +89,7 @@ public class AttackManager {
 
             @Override
             public void onHexReached(Hex previousHex, Hex hex) {
-                if (hex.fraction == getFraction()) return;
+                if (hex.sameOwner(getFraction())) return;
                 if (!pattern.contains(hex)) return;
                 hex.aiData.potentialAttackers.add(tempUnit);
             }
@@ -207,10 +207,10 @@ public class AttackManager {
 
 
     boolean tryToCoverHexWithMoney(Hex hex) {
-        if (getCurrentProvince().money < GameRules.PRICE_UNIT) return false;
+        if (getCurrentProvince().money < getCurrentProvince().getCheapestUnitPrice()) return false;
 
         int strength = 1;
-        if (getCurrentProvince().money >= 2 * GameRules.PRICE_UNIT && canAffordTaxChange(getRuleset().getUnitTax(2))) {
+        if (getCurrentProvince().money >= getCurrentProvince().getCurrentUnitPrice(2) && canAffordTaxChange(getRuleset().getUnitTax(2))) {
             strength = 2;
         }
 
@@ -485,7 +485,7 @@ public class AttackManager {
 
     boolean tryToCaptureWithMoney(Hex hex, int defenseNumber) {
         int strength = defenseNumber + 1;
-        int price = GameRules.PRICE_UNIT * strength;
+        int price = getCurrentProvince().getCurrentUnitPrice(strength);
         if (getCurrentProvince().money < price) return false;
 
         if (!isItAcceptableToAcquireUnitToAttack(hex, strength)) return false;
@@ -515,7 +515,7 @@ public class AttackManager {
             say("AttackManager.tryToCaptureWithReinforcement: problem");
         }
         int additionalStrength = defenseNumber - strength + 1;
-        int price = GameRules.PRICE_UNIT * additionalStrength;
+        int price = getCurrentProvince().getCurrentUnitPrice(additionalStrength);
         if (getCurrentProvince().money < price) return false;
         int taxChange = predictTaxChangeFromMerge(strength, additionalStrength);
         taxChange += getRuleset().getUnitTax(additionalStrength);
@@ -535,7 +535,7 @@ public class AttackManager {
 
     Hex getEmptyOwnedHex(ArrayList<Hex> list) {
         for (Hex hex : list) {
-            if (hex.fraction != getFraction()) continue;
+            if (!hex.sameOwner(getFraction())) continue;
             if (!hex.isEmpty()) continue;
             if (!hex.aiData.currentlyOwned) continue;
             return hex;

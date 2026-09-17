@@ -2,12 +2,10 @@ package yio.tro.antiyoy.stuff;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.XmlReader;
 import yio.tro.antiyoy.gameplay.DebugFlags;
 
 public class LanguagesManager {
@@ -87,23 +85,16 @@ public class LanguagesManager {
         ArrayList<LanguageChooseItem> result = new ArrayList<>();
 
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
-            Document doc = db.parse(fileHandle.read());
+            XmlReader.Element root = readLanguagesFile();
 
-            Element root = doc.getDocumentElement();
-
-            NodeList languages = root.getElementsByTagName("language");
-            int numLanguages = languages.getLength();
-
-            for (int i = 0; i < numLanguages; i++) {
-                Node language = languages.item(i);
+            for (int i = 0; i < root.getChildCount(); i++) {
+                XmlReader.Element language = root.getChild(i);
+                if (!language.getName().equals("language")) continue;
 
                 LanguageChooseItem chooseItem = new LanguageChooseItem();
-                chooseItem.name = language.getAttributes().getNamedItem("name").getTextContent();
-                chooseItem.title = language.getAttributes().getNamedItem("title").getTextContent();
-                chooseItem.author = language.getAttributes().getNamedItem("author").getTextContent();
+                chooseItem.name = language.getAttribute("name", "");
+                chooseItem.title = language.getAttribute("title", "");
+                chooseItem.author = language.getAttribute("author", "");
 
                 result.add(chooseItem);
             }
@@ -115,39 +106,45 @@ public class LanguagesManager {
     }
 
 
+    /**
+     * Языковой файл читается через XmlReader из libGDX, а не через
+     * javax.xml: последнего нет ни в вебе, ни на TeaVM, и это было
+     * единственное место во всей игре, которое туда заглядывало.
+     */
+    private XmlReader.Element readLanguagesFile() {
+        FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
+
+        String source = fileHandle.readString("UTF-8");
+
+        // Файл начинается с BOM. javax.xml его проглатывал молча, XmlReader
+        // из libGDX — нет, и парсинг разваливался целиком.
+        if (source.length() > 0 && source.charAt(0) == '﻿') {
+            source = source.substring(1);
+        }
+
+        return new XmlReader().parse(source);
+    }
+
+
     public boolean loadLanguage(String languageName) {
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            FileHandle fileHandle = Gdx.files.internal(LANGUAGES_FILE);
-            Document doc = db.parse(fileHandle.read());
+            XmlReader.Element root = readLanguagesFile();
 
-            Element root = doc.getDocumentElement();
+            for (int i = 0; i < root.getChildCount(); i++) {
+                XmlReader.Element language = root.getChild(i);
+                if (!language.getName().equals("language")) continue;
 
-            NodeList languages = root.getElementsByTagName("language");
-            int numLanguages = languages.getLength();
+                String name = language.getAttribute("name", null);
+                String secondName = language.getAttribute("second_name", null);
 
-            for (int i = 0; i < numLanguages; ++i) {
-                Node language = languages.item(i);
+                boolean matches = languageName.equals(name)
+                        || (secondName != null && secondName.equals(languageName));
+                if (!matches) continue;
 
-                Node secondName = language.getAttributes().getNamedItem("second_name");
-                if (    language.getAttributes().getNamedItem("name").getTextContent().equals(languageName) ||
-                        (secondName != null && secondName.getTextContent().equals(languageName))) {
-                    _language.clear();
-                    Element languageElement = (Element) language;
-                    NodeList strings = languageElement.getElementsByTagName("string");
-                    int numStrings = strings.getLength();
+                _language.clear();
+                loadStringsInto(language);
 
-                    for (int j = 0; j < numStrings; ++j) {
-                        NamedNodeMap attributes = strings.item(j).getAttributes();
-                        String key = attributes.getNamedItem("key").getTextContent();
-                        String value = attributes.getNamedItem("value").getTextContent();
-                        value = value.replace("<br />", "\n");
-                        _language.put(key, value);
-                    }
-
-                    return true;
-                }
+                return true;
             }
         } catch (Exception e) {
             System.out.println("Error loading languages file " + LANGUAGES_FILE);
@@ -155,5 +152,41 @@ public class LanguagesManager {
         }
 
         return false;
+    }
+
+
+    private void loadStringsInto(XmlReader.Element language) {
+        for (int j = 0; j < language.getChildCount(); j++) {
+            XmlReader.Element string = language.getChild(j);
+            if (!string.getName().equals("string")) continue;
+
+            String key = string.getAttribute("key", null);
+            String value = string.getAttribute("value", null);
+            if (key == null || value == null) continue;
+
+            // Перенос строки задаётся только через <br />, и делается это
+            // после нормализации.
+            _language.put(key, normalizeAttribute(value).replace("<br />", "\n"));
+        }
+    }
+
+
+    /**
+     * Нормализация значения атрибута по стандарту XML: перевод строки и
+     * табуляция внутри атрибута схлопываются в пробел.
+     *
+     * javax.xml делал это сам, XmlReader из libGDX — нет. Без этого длинные
+     * тексты справки, записанные в несколько строк, приезжали с настоящими
+     * переносами вместо пробелов.
+     */
+    private String normalizeAttribute(String value) {
+        if (value.indexOf('\n') < 0 && value.indexOf('\r') < 0 && value.indexOf('\t') < 0) {
+            return value;
+        }
+
+        return value.replace("\r\n", " ")
+                .replace('\r', ' ')
+                .replace('\n', ' ')
+                .replace('\t', ' ');
     }
 }

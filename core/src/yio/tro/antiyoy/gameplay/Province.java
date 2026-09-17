@@ -2,6 +2,7 @@ package yio.tro.antiyoy.gameplay;
 
 import yio.tro.antiyoy.stuff.Fonts;
 import yio.tro.antiyoy.YioGdxGame;
+import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
 import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.stuff.PointYio;
 
@@ -14,6 +15,15 @@ public class Province {
 
     public static final int DEFAULT_MONEY = 10;
     public int money;
+
+    /**
+     * Сколько юнитов куплено в этой провинции в текущий ход. Спека, 2.2:
+     * каждый следующий дороже предыдущего, счётчик обнуляется в начале хода.
+     *
+     * Переносится в снапшот: провинции пересоздаются при отмене хода, и без
+     * этого откат обнулял бы удорожание.
+     */
+    public int unitsBoughtThisTurn;
     public ArrayList<Hex> hexList, tempList;
     private GameController gameController;
     public String name;
@@ -106,6 +116,7 @@ public class Province {
     Province getSnapshotCopy() {
         Province copy = new Province(gameController, hexList);
         copy.money = money;
+        copy.unitsBoughtThisTurn = unitsBoughtThisTurn;
 //        copy.capital = capital.getSnapshotCopy();
         return copy;
     }
@@ -304,7 +315,7 @@ public class Province {
                 if (adjacentHex == null) continue;
                 if (adjacentHex.isNullHex()) continue;
                 if (!adjacentHex.active) continue;
-                if (adjacentHex.fraction != otherFraction) continue;
+                if (!adjacentHex.sameOwner(otherFraction)) continue;
                 return true;
             }
         }
@@ -324,6 +335,42 @@ public class Province {
 
     public int getCurrentFarmPrice() {
         return GameRules.PRICE_FARM + getExtraFarmCost();
+    }
+
+
+    /**
+     * Цена юнита с учётом уже купленных в этот ход. Сделано по образцу
+     * ферм, у которых цена росла и до мода.
+     *
+     * Единственная точка правды: и списание, и проверки платёжеспособности
+     * в ИИ обязаны спрашивать её, иначе ИИ будет считать по старой цене и
+     * буксовать на покупках, которые не может себе позволить.
+     */
+    public int getCurrentUnitPrice(int strength) {
+        int basePrice = GameRules.PRICE_UNIT * strength;
+
+        if (!GameRules.isUnitPriceGrowthEnabled()) return basePrice;
+
+        return EconomyTuning.getEscalatedUnitPrice(basePrice, unitsBoughtThisTurn);
+    }
+
+
+    /**
+     * Цена следующего юнита силы 1: ею ИИ проверяет, может ли вообще
+     * кого-то нанять.
+     */
+    public int getCheapestUnitPrice() {
+        return getCurrentUnitPrice(1);
+    }
+
+
+    public void onUnitBought() {
+        unitsBoughtThisTurn++;
+    }
+
+
+    public void onTurnStarted() {
+        unitsBoughtThisTurn = 0;
     }
 
 

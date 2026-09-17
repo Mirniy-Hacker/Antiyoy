@@ -72,7 +72,7 @@ public class AutomaticTransitionWorker {
         MoveZoneManager moveZoneManager = fieldManager.moveZoneManager;
         ArrayList<Hex> moveZone = moveZoneManager.detectMoveZone(unit.currentHex, unit.strength);
         for (Hex hex : moveZone) {
-            if (hex.fraction == unit.getFraction()) continue;
+            if (hex.sameOwner(unit.getFraction())) continue;
             return false;
         }
         return true;

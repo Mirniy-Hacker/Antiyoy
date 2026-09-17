@@ -1,11 +1,28 @@
-apply plugin: "java"
+apply plugin: 'java-library'
 
-sourceCompatibility = 1.6
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-sourceSets.main.java.srcDirs = [ "src/" ]
+// Исходники оригинала лежат в core/src, а не в core/src/main/java.
+sourceSets.main.java.srcDirs = [ 'src/' ]
+sourceSets.main.resources.srcDirs = []
 
+// Оригинал объявлял sourceCompatibility = 1.6 — современный JDK такое не
+// принимает (минимум 8). Код при этом остаётся старым Java, ничего из
+// новых возможностей языка здесь не используется.
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+if (JavaVersion.current().isJava9Compatible()) {
+  compileJava.options.release.set(8)
+}
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+}
 
 eclipse.project {
-    name = appName + "-core"
+  name = appName + '-core'
 }

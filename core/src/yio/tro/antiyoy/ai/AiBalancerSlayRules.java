@@ -217,7 +217,7 @@ public class AiBalancerSlayRules extends AiExpertSlayRules implements Comparator
     ArrayList<Hex> findAttackableHexes(int attackerFraction, ArrayList<Hex> moveZone) {
         result.clear();
         for (Hex hex : moveZone) {
-            if (hex.fraction == attackerFraction) continue;
+            if (hex.sameOwner(attackerFraction)) continue;
             result.add(hex);
         }
 

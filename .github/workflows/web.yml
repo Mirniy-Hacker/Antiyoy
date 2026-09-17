@@ -1,0 +1,58 @@
+name: Build and deploy web
+
+# Веб-сборка — основной способ попасть на iPhone: PWA через Safari,
+# без подписи, AltStore и семидневного срока жизни сборки.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Параллельные деплои не нужны, но начатый прерывать не стоит.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: chmod +x ./gradlew
+
+      - name: Build web application
+        run: ./gradlew :teavm:gdx_teavm_web_js_release_build --stacktrace
+
+      - name: Add PWA manifest and icons
+        run: |
+          cp web/manifest.webmanifest teavm/build/dist/js/release/webapp/
+          cp web/icon-192.png teavm/build/dist/js/release/webapp/
+          cp web/icon-512.png teavm/build/dist/js/release/webapp/
+          chmod +x web/patch-index.sh
+          ./web/patch-index.sh teavm/build/dist/js/release/webapp/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: teavm/build/dist/js/release/webapp
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

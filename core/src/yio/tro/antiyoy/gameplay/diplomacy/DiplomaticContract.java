@@ -124,6 +124,27 @@ public class DiplomaticContract implements ReusableYio {
     }
 
 
+    /**
+     * Идентичность стороны. Сериализация пользуется ею, а не цветом.
+     */
+    public int getOneEntityId() {
+        if (one == null) {
+            return -1;
+        }
+
+        return one.entityId;
+    }
+
+
+    public int getTwoEntityId() {
+        if (two == null) {
+            return -1;
+        }
+
+        return two.entityId;
+    }
+
+
     public int getOneFraction() {
         if (one == null) {
             return -1;

@@ -1,0 +1,15 @@
+// Плагин gdx-teavm публикуется на Maven Central, а не на портале Gradle.
+pluginManagement {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+  }
+}
+
+rootProject.name = 'Antiyoy'
+
+include 'core'
+include 'lwjgl3'
+include 'ios'
+include 'teavm'

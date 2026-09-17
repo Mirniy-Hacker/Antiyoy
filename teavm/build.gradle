@@ -1,0 +1,45 @@
+import org.teavm.gradle.api.OptimizationLevel
+
+plugins {
+  id 'java'
+  id 'com.github.xpenatan.gdx-teavm' version "$gdxTeaVMVersion"
+}
+
+// TeaVM требует минимум 17 и не ниже JDK, которым собирается проект.
+// Это касается только этого модуля: core остаётся на 8.
+java.targetCompatibility = '17'
+java.sourceCompatibility = '17'
+
+dependencies {
+  implementation project(':core')
+  implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
+
+  // FreeType под TeaVM существует, поэтому шрифты игры переделывать не нужно.
+  implementation "com.github.xpenatan.gdx-teavm:gdx-freetype-web:$gdxTeaVMVersion"
+}
+
+gdxTeaVM {
+  assets.from(rootProject.files('assets'))
+
+  webDefaults {
+    mainClass.set('yio.tro.antiyoy.teavm.TeaVMLauncher')
+    htmlTitle.set(appName)
+  }
+
+  js {
+    devServer {
+      enabled.set(true)
+      autoBuild.set(true)
+      autoReload.set(true)
+      optimization.set(OptimizationLevel.NONE)
+    }
+  }
+
+  js('release') {
+    obfuscated.set(true)
+    serverPort.set(8180)
+    optimization.set(OptimizationLevel.BALANCED)
+  }
+}
+
+eclipse.project.name = appName + '-teavm'

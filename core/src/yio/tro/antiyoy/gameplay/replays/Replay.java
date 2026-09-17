@@ -100,6 +100,23 @@ public class Replay {
     }
 
 
+    /**
+     * Кончились ли записанные действия. Нужно прогону проверки реплеев:
+     * currentStepIndex пакетно-приватный, а извне надо понимать, доиграл
+     * реплей или нет.
+     */
+    public boolean isFinished() {
+        if (actions.size() == 0) return true;
+
+        return currentStepIndex >= actions.size();
+    }
+
+
+    public int getActionsQuantity() {
+        return actions.size();
+    }
+
+
     public void onTacticalPause() {
         if (!go) return;
 
