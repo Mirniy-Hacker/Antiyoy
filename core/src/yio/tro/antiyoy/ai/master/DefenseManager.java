@@ -334,7 +334,7 @@ public class DefenseManager {
         int necessaryStrength = aiMaster.getStrengthNecessaryToCapture(enemyUnit.currentHex);
         int additionalStrength = necessaryStrength - strongestUnit.strength;
 
-        int price = additionalStrength * GameRules.PRICE_UNIT;
+        int price = getCurrentProvince().getCurrentUnitPrice(additionalStrength);
         if (getCurrentProvince().money < price) return false;
 
         int taxChange = aiMaster.predictTaxChangeFromMerge(strongestUnit.strength, additionalStrength);
@@ -474,7 +474,7 @@ public class DefenseManager {
 
         Hex targetHex = enemyUnit.currentHex;
         int necessaryStrength = aiMaster.getStrengthNecessaryToCapture(targetHex);
-        int price = GameRules.PRICE_UNIT * necessaryStrength;
+        int price = getCurrentProvince().getCurrentUnitPrice(necessaryStrength);
         if (getCurrentProvince().money < price) return false;
 
         int taxChange = getRuleset().getUnitTax(necessaryStrength);
@@ -617,7 +617,7 @@ public class DefenseManager {
         for (Hex hex : pattern) {
             if (hex.aiData.canBeCaptured) continue;
             int strength = aiMaster.getStrengthNecessaryToCapture(hex);
-            price += GameRules.PRICE_UNIT * strength;
+            price += getCurrentProvince().getCurrentUnitPrice(strength);
         }
         return price;
     }

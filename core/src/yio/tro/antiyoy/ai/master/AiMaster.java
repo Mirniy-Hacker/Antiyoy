@@ -954,7 +954,7 @@ public class AiMaster extends AbstractAi {
 
 
     private void checkToFightTreesWithMoney() {
-        while (currentProvince.money >= GameRules.PRICE_UNIT) {
+        while (currentProvince.money >= currentProvince.getCheapestUnitPrice()) {
             if (!currentProvince.containsTrees()) break;
             Hex hex = getWorstTree();
             buildUnit(hex, 1);
@@ -1876,13 +1876,13 @@ public class AiMaster extends AbstractAi {
             default:
                 return true;
             case unit1:
-                return money >= GameRules.PRICE_UNIT;
+                return money >= currentProvince.getCurrentUnitPrice(1);
             case unit2:
-                return money >= 2 * GameRules.PRICE_UNIT;
+                return money >= currentProvince.getCurrentUnitPrice(2);
             case unit3:
-                return money >= 3 * GameRules.PRICE_UNIT;
+                return money >= currentProvince.getCurrentUnitPrice(3);
             case unit4:
-                return money >= 4 * GameRules.PRICE_UNIT;
+                return money >= currentProvince.getCurrentUnitPrice(4);
             case farm:
                 if (GameRules.slayRules) return false;
                 return currentProvince.hasMoneyForFarm() && doesProvinceHaveHexForNewFarm();

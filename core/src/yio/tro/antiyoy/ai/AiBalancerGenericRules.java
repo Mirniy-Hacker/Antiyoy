@@ -59,7 +59,7 @@ public class AiBalancerGenericRules extends AiExpertGenericRules implements Comp
 
 
     private void killRedundantUnits(Province province) {
-        while (province.money >= GameRules.PRICE_UNIT && province.getProfit() >= 0) {
+        while (province.money >= province.getCheapestUnitPrice() && province.getProfit() >= 0) {
             Unit unitWithMaxStrengh = findUnitWithMaxStrenghExceptKnight(province);
             if (unitWithMaxStrengh == null) break;
             if (!canProvinceBuildUnit(province, 1)) break;

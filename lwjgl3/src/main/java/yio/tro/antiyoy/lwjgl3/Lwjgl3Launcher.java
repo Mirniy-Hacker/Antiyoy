@@ -6,6 +6,8 @@ import yio.tro.antiyoy.PlatformType;
 import yio.tro.antiyoy.YioGdxGame;
 import yio.tro.antiyoy.ai.Difficulty;
 import yio.tro.antiyoy.gameplay.LevelSize;
+import yio.tro.antiyoy.gameplay.rules.EconomyTuning;
+import yio.tro.antiyoy.gameplay.rules.GameRules;
 import yio.tro.antiyoy.gameplay.sim.SimConfig;
 
 /**
@@ -109,12 +111,84 @@ public class Lwjgl3Launcher {
             } else if (key.equals("--trace")) {
                 config.tracePath = value;
                 i++;
+            } else if (key.equals("--mod")) {
+                applyModFlags(value);
+                i++;
+            } else if (key.equals("--tune")) {
+                applyTuning(value);
+                i++;
             } else if (key.equals("--replay-check")) {
                 config.enabled = true;
                 config.replayCheckMatches = Integer.parseInt(value);
                 i++;
             }
         }
+    }
+
+
+    /**
+     * Включает механики мода для прогона: "all" или список ключей через
+     * запятую. Флаги ставятся сразу обоим режимам, обычному и slay, потому
+     * что режим прогона задаётся отдельно через --slay.
+     *
+     * GameRules.defaultValues() флаги мода не трогает, поэтому выставить их
+     * один раз при старте достаточно.
+     */
+    private static void applyModFlags(String value) {
+        GameRules.defaultModFlags();
+
+        if (value.equalsIgnoreCase("all")) {
+            GameRules.setAllModFlags(true);
+            return;
+        }
+
+        boolean allFlags[][] = GameRules.getAllModFlags();
+
+        for (String name : value.split(",")) {
+            String trimmed = name.trim();
+            boolean found = false;
+
+            for (int i = 0; i < GameRules.MOD_FLAG_KEYS.length; i++) {
+                if (!GameRules.MOD_FLAG_KEYS[i].equals(trimmed)) continue;
+
+                allFlags[i][GameRules.MODE_GENERIC] = true;
+                allFlags[i][GameRules.MODE_SLAY] = true;
+                found = true;
+                break;
+            }
+
+            if (!found) {
+                System.out.println("Неизвестный флаг мода: " + trimmed);
+                System.out.println("Доступные: " + String.join(", ", GameRules.MOD_FLAG_KEYS));
+                System.exit(2);
+            }
+        }
+    }
+
+
+    /**
+     * Переопределение чисел настройки: key=value через запятую. Нужно, чтобы
+     * подбирать баланс прогонами, а не пересборками.
+     */
+    private static void applyTuning(String value) {
+        for (String pair : value.split(",")) {
+            String parts[] = pair.trim().split("=");
+
+            if (parts.length != 2) {
+                System.out.println("Ожидается key=value, получено: " + pair);
+                System.exit(2);
+            }
+
+            String name = parts[0].trim();
+            float number = Float.parseFloat(parts[1].trim());
+
+            if (EconomyTuning.setByName(name, number)) continue;
+
+            System.out.println("Неизвестное число настройки: " + name);
+            System.exit(2);
+        }
+
+        System.out.println("Tuning: " + EconomyTuning.describe());
     }
 
 
@@ -156,6 +230,7 @@ public class Lwjgl3Launcher {
         System.out.println("  --max-turns N      потолок ходов, дальше партия считается зависшей");
         System.out.println("  --out PATH         путь к CSV (по умолчанию sim-results/sim.csv)");
         System.out.println("  --trace PATH       по-ходовой след состояния; diff двух следов");
+        System.out.println("  --mod LIST         включить механики мода: all или ключи через запятую");
         System.out.println("                     показывает ход, на котором прогоны разошлись");
         System.out.println();
         System.out.println("Самопроверка:");

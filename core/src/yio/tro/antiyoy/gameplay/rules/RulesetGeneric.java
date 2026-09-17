@@ -97,7 +97,9 @@ public class RulesetGeneric extends Ruleset{
 
     @Override
     public boolean canBuildUnit(Province province, int strength) {
-        return province.money >= GameRules.PRICE_UNIT * strength;
+        // Цена берётся у провинции: внутри хода она растёт с каждым купленным
+        // в ней юнитом (спека, 2.2).
+        return province.money >= province.getCurrentUnitPrice(strength);
     }
 
 

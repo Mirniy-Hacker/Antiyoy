@@ -877,8 +877,15 @@ public class FieldManager implements EncodeableYio{
         if (isUnmergeableSituationDetected(province, hex, strength)) return false;
 
         gameController.takeSnapshot();
-        province.money -= GameRules.PRICE_UNIT * strength;
-        gameController.getMatchStatistics().onMoneySpent(gameController.turn, GameRules.PRICE_UNIT * strength);
+
+        // Цена спрашивается у провинции: она знает, сколько юнитов уже
+        // куплено в этот ход (спека, 2.2).
+        int price = province.getCurrentUnitPrice(strength);
+
+        province.money -= price;
+        province.onUnitBought();
+
+        gameController.getMatchStatistics().onMoneySpent(gameController.turn, price);
         gameController.replayManager.onUnitBuilt(province, hex, strength);
 
         if (canUnitBeBuiltPeacefully(province, hex)) {

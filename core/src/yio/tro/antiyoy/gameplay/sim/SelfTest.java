@@ -90,9 +90,15 @@ public class SelfTest {
                         && StatehoodTuning.policyDotationShares != null
                         && StatehoodTuning.policyDotationShares.length == StatehoodTuning.POLICIES_QUANTITY);
 
-        // Проверка формул, а не только присвоений.
-        check("потолок казны считается по спеке: 20 * income",
-                EconomyTuning.getTreasuryCap(80) == 1600);
+        // Проверяется формула, а не конкретное число: множитель подбирался
+        // прогонами и ещё будет меняться.
+        check("потолок казны пропорционален доходу",
+                EconomyTuning.getTreasuryCap(80)
+                        == (int) (EconomyTuning.treasuryCapMultiplier * 80));
+
+        check("утечка есть сверх потолка и отсутствует под ним",
+                EconomyTuning.getTreasuryLeak(EconomyTuning.getTreasuryCap(80), 80) == 0
+                        && EconomyTuning.getTreasuryLeak(EconomyTuning.getTreasuryCap(80) * 2, 80) > 0);
 
         check("двенадцатый юнит примерно впятеро дороже первого",
                 isTwelfthUnitAboutFiveTimes());

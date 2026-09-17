@@ -28,9 +28,43 @@ public class EconomyTuning {
     public static float unitPriceGrowthPerUnit;
 
 
+    /**
+     * Переопределение числа по имени. Нужно подбору на прогонах: без него
+     * каждая проба требует пересборки.
+     *
+     * Написано явным перебором, а не рефлексией: рефлексии в проекте нет ни
+     * одной, и веб-бэкенды её не поддерживают.
+     */
+    public static boolean setByName(String name, float value) {
+        if (name.equals("treasuryCapMultiplier")) {
+            treasuryCapMultiplier = value;
+            return true;
+        }
+
+        if (name.equals("treasuryLeakPerTurn")) {
+            treasuryLeakPerTurn = value;
+            return true;
+        }
+
+        if (name.equals("unitPriceGrowthPerUnit")) {
+            unitPriceGrowthPerUnit = value;
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public static String describe() {
+        return "treasuryCapMultiplier=" + treasuryCapMultiplier +
+                " treasuryLeakPerTurn=" + treasuryLeakPerTurn +
+                " unitPriceGrowthPerUnit=" + unitPriceGrowthPerUnit;
+    }
+
+
     public static void defaultValues() {
-        treasuryCapMultiplier = 20f;
-        treasuryLeakPerTurn = 0.1f;
+        treasuryCapMultiplier = 6f;
+        treasuryLeakPerTurn = 0.4f;
         unitPriceGrowthPerUnit = 0.15f;
     }
 
